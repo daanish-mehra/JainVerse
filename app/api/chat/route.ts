@@ -1,124 +1,60 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(request: NextRequest) {
+const mockResponses: Record<string, string> = {
+  "ahimsa": "Ahimsa (non-violence) is the highest virtue in Jainism. It means not causing harm to any living being through thought, word, or deed. This principle extends to all life forms, from humans to the smallest microorganisms. Ahimsa is practiced through vegetarianism, compassion, and respect for all living beings.",
+  
+  "mahavira": "Mahavira was the 24th and last Tirthankara (spiritual teacher) of Jainism. Born as Vardhamana around 599 BCE, he renounced worldly life at age 30 and achieved enlightenment after 12 years of intense meditation and ascetic practices. He taught the path to liberation through the three jewels: Right Faith, Right Knowledge, and Right Conduct.",
+  
+  "jainism": "Jainism is an ancient Indian religion that emphasizes non-violence, truth, non-stealing, celibacy, and non-possessiveness. Founded on the teachings of 24 Tirthankaras, Jainism teaches that every soul has the potential to achieve liberation (moksha) through ethical living, meditation, and spiritual discipline.",
+  
+  "tirthankara": "Tirthankaras are spiritual teachers in Jainism who have achieved enlightenment and show the path to liberation. There have been 24 Tirthankaras in the current time cycle, with Mahavira being the last. They are revered as role models who have conquered their inner enemies (passions) and achieved perfect knowledge.",
+  
+  "karma": "In Jainism, karma is a subtle matter that binds to the soul based on one's actions, thoughts, and words. Good actions lead to good karma, while harmful actions create bad karma. The goal is to stop the influx of new karma and shed existing karma through ethical living, meditation, and spiritual practices.",
+  
+  "moksha": "Moksha (liberation) in Jainism is the ultimate goal - the complete freedom of the soul from the cycle of birth and death. It is achieved when all karma is eliminated and the soul reaches its pure, perfect state. This requires following the path of Right Faith, Right Knowledge, and Right Conduct.",
+  
+  "vrata": "Vratas are vows or observances in Jainism that help practitioners progress on the spiritual path. Common vratas include fasting (upvas), limiting food intake (ekasan - one meal a day), and abstaining from food after sunset (chauvihar). These practices help develop self-discipline and reduce attachment to material pleasures.",
+  
+  "meditation": "Meditation (dhyana) in Jainism is a practice of focusing the mind to achieve inner peace and spiritual progress. It helps practitioners develop equanimity, reduce passions, and purify the soul. Common forms include contemplation of the Tirthankaras, reflection on the nature of the soul, and mindfulness practices.",
+};
+
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json();
-    const { message, language = "EN", mode = "beginner" } = body;
-
-    if (!message) {
+    const { message, language = "EN", mode = "beginner" } = await req.json();
+    
+    if (!message || typeof message !== 'string') {
       return NextResponse.json(
-        { error: "Message is required" },
+        { error: 'Message is required' },
         { status: 400 }
       );
     }
 
-    const azureOpenAIKey = process.env.AZURE_OPENAI_API_KEY;
-    const azureOpenAIEndpoint = process.env.AZURE_OPENAI_ENDPOINT;
-    const deploymentName = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "jainverse-gpt4";
-    const apiVersion = process.env.AZURE_OPENAI_API_VERSION || "2024-02-15-preview";
-
-    if (!azureOpenAIKey || !azureOpenAIEndpoint) {
-      return NextResponse.json(
-        {
-          error: "Azure OpenAI not configured",
-          message: "API keys not set. Please configure Azure OpenAI.",
-        },
-        { status: 503 }
-      );
-    }
-
-    const systemPrompt = getSystemPrompt(mode);
-    const userMessage = translateMessage(message, language);
-
-    const response = await fetch(
-      `${azureOpenAIEndpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=${apiVersion}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "api-key": azureOpenAIKey,
-        },
-        body: JSON.stringify({
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userMessage },
-          ],
-          temperature: 0.7,
-          max_tokens: 1000,
-        }),
+    const lowerMessage = message.toLowerCase().trim();
+    
+    for (const [key, response] of Object.entries(mockResponses)) {
+      if (lowerMessage.includes(key)) {
+        return NextResponse.json({
+          text: response,
+          sources: ["Jainworld.com", "Tattvarth Sutra"],
+          confidence: 95,
+        });
       }
-    );
-
-    if (!response.ok) {
-      const error = await response.text();
-      return NextResponse.json(
-        { error: "Azure OpenAI error", details: error },
-        { status: response.status }
-      );
     }
-
-    const data = await response.json();
-    const assistantMessage = data.choices[0]?.message?.content || "I apologize, but I couldn't generate a response.";
-
-    const result = {
-      message: assistantMessage,
-      sources: extractSources(assistantMessage),
-      confidence: calculateConfidence(data),
-    };
-
-    return NextResponse.json(result);
+    
+    const defaultResponse = mode === "beginner" 
+      ? "I'm here to help you learn about Jain philosophy! Try asking about:\n\n• What is Ahimsa?\n• Tell me about Mahavira\n• What is Jainism?\n• Explain Tirthankaras\n• What is Karma in Jainism?\n• How to achieve Moksha?\n• What are Vratas?\n• Jain meditation practices"
+      : "I'm still learning about Jain philosophy. Could you ask about specific topics like Ahimsa, Mahavira, Tirthankaras, Karma, Moksha, Vratas, or Meditation? I can provide detailed explanations on these topics.";
+    
+    return NextResponse.json({
+      text: defaultResponse,
+      sources: [],
+      confidence: 60,
+    });
   } catch (error) {
-    console.error("Chat API error:", error);
+    console.error('Chat API error:', error);
     return NextResponse.json(
-      { error: "Internal server error", details: error instanceof Error ? error.message : "Unknown error" },
+      { error: 'Failed to generate response', text: "I apologize, but I'm having trouble processing your request right now. Please try again." },
       { status: 500 }
     );
   }
 }
-
-function getSystemPrompt(mode: string): string {
-  const basePrompt = "You are a knowledgeable Jain philosophy assistant. Provide accurate, scripture-backed information about Jainism, including principles like Ahimsa (non-violence), Anekantvad (multi-sidedness), Aparigraha (non-attachment), and other Jain teachings. Always cite sources when possible.";
-  
-  const modePrompts: Record<string, string> = {
-    beginner: "Explain concepts in simple, easy-to-understand language suitable for beginners. Use examples and analogies.",
-    intermediate: "Provide detailed explanations suitable for those with some knowledge of Jainism.",
-    scholar: "Provide scholarly, in-depth explanations with references to Agamas and Jain texts. Use Sanskrit/Prakrit terms where appropriate.",
-  };
-
-  return `${basePrompt} ${modePrompts[mode] || modePrompts.beginner}`;
-}
-
-function translateMessage(message: string, language: string): string {
-  if (language === "EN") return message;
-  
-  return message;
-}
-
-function extractSources(message: string): string[] {
-  const sources: string[] = [];
-  const sourcePatterns = [
-    /Tattvarth\s+Sutra/i,
-    /Jainworld\.com/i,
-    /Acharanga\s+Sutra/i,
-    /Sthananga\s+Sutra/i,
-  ];
-
-  sourcePatterns.forEach((pattern) => {
-    if (pattern.test(message)) {
-      sources.push(message.match(pattern)?.[0] || "");
-    }
-  });
-
-  return sources.length > 0 ? sources : ["General Jain knowledge"];
-}
-
-function calculateConfidence(data: any): number {
-  if (!data.choices?.[0]) return 80;
-  
-  const finishReason = data.choices[0].finish_reason;
-  if (finishReason === "stop") return 95;
-  if (finishReason === "length") return 85;
-  
-  return 80;
-}
-

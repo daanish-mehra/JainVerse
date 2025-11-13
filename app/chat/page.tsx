@@ -53,21 +53,55 @@ export default function ChatPage() {
     };
 
     setMessages([...messages, userMessage]);
+    const currentInput = input;
     setInput("");
     setIsTyping(true);
 
-    setTimeout(() => {
-      const botMessage: Message = {
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: currentInput,
+          language,
+          mode,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const botMessage: Message = {
+          id: messages.length + 2,
+          type: "bot",
+          text: data.text || data.message || "I apologize, but I couldn't generate a response.",
+          timestamp: new Date(),
+          sources: data.sources || [],
+          confidence: data.confidence || 80,
+        };
+        setMessages((prev) => [...prev, botMessage]);
+      } else {
+        const errorMessage: Message = {
+          id: messages.length + 2,
+          type: "bot",
+          text: data.error || data.message || "I'm having trouble right now. Please try again later.",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      }
+    } catch (error) {
+      const errorMessage: Message = {
         id: messages.length + 2,
         type: "bot",
-        text: "Ahimsa is the principle of non-violence, which is the foundation of Jain philosophy. It means not causing harm to any living being through thought, word, or deed. Ahimsa is considered the highest virtue in Jainism and is practiced in daily life through vegetarianism, compassion, and respect for all life forms.",
+        text: "I apologize, but I'm having connection issues. Please check your internet and try again.",
         timestamp: new Date(),
-        sources: ["Tattvarth Sutra", "Jainworld.com"],
-        confidence: 95,
       };
-      setMessages((prev) => [...prev, botMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return (
