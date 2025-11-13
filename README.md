@@ -1,8 +1,10 @@
-# 🕉️ JainVerse - Where Ancient Wisdom Meets Modern AI
+# 🕉️ JainAI - Mobile App for JainVerse
 
 ## 🎯 Overview
 
-**JainVerse** is an AI-powered, interactive, and visually stunning web app for the Jain Hackathon 2025. It democratizes Jain knowledge by making it accessible, engaging, and authentic for all age groups.
+**JainAI** is a mobile app that integrates with **JainVerse** - an AI-powered, interactive, and visually stunning companion for the Jain Hackathon 2025. It democratizes Jain knowledge by making it accessible, engaging, and authentic for all age groups.
+
+**JainAI** is the mobile application, while **JainVerse** is the comprehensive platform website.
 
 ## 🚀 Features
 
@@ -54,11 +56,12 @@
 
 ### Design Principles
 - Modern, minimal, spiritual theme
+- Mobile-first responsive design
 - Rounded corners (2xl), glassmorphism cards
 - Smooth motion transitions (Framer Motion)
-- Responsive & mobile-first
+- Scroll-triggered animations and typewriter effects
 - Fullscreen layout with bottom navigation
-- Light/dark mode support
+- Light/dark mode support (coming soon)
 
 ## 🚀 Quick Start
 
@@ -77,7 +80,7 @@ Create `.env.local`:
 # Azure OpenAI
 AZURE_OPENAI_API_KEY=your_key_here
 AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_OPENAI_DEPLOYMENT_NAME=jainverse-gpt4
+AZURE_OPENAI_DEPLOYMENT_NAME=jainai-gpt4
 AZURE_OPENAI_API_VERSION=2024-02-15-preview
 
 # ElevenLabs (Optional)
@@ -93,7 +96,7 @@ DATABASE_URL=your_database_url
 npm run dev
 ```
 
-Visit: http://localhost:3000
+Visit: http://localhost:3000 (or the port shown in terminal)
 
 ## 📁 Project Structure
 
@@ -125,8 +128,12 @@ jainverse/
 │   │   ├── card.tsx
 │   │   ├── input.tsx
 │   │   └── textarea.tsx
-│   └── layout/
-│       └── BottomNav.tsx     # Bottom navigation
+│   ├── layout/
+│   │   └── BottomNav.tsx     # Bottom navigation
+│   └── animations/
+│       ├── ScrollReveal.tsx  # Scroll animations
+│       ├── Typewriter.tsx    # Typewriter effect
+│       └── FadeIn.tsx        # Fade-in animations
 ├── lib/
 │   └── utils.ts              # Utility functions
 └── public/                   # Static assets
@@ -135,14 +142,15 @@ jainverse/
 ## 🎯 Pages
 
 ### 1. Home Page (/)
-- Hero section with daily reflection
+- Hero section with animated JainAI branding
+- Daily Jain reflection
 - Quick navigation tiles
 - Today's practices
 - Progress summary
 - Floating "Ask AI" button
 
 ### 2. Chatbot Page (/chat)
-- Conversational JainGPT
+- Conversational JainAI Chat
 - Multi-language support
 - Beginner/Intermediate/Scholar modes
 - Citation tracking
@@ -206,9 +214,20 @@ jainverse/
 - **Textarea** - Styled textarea
 - **BottomNav** - Mobile-style bottom navigation
 
+### Animation Components
+- **ScrollReveal** - Elements appear on scroll
+- **Typewriter** - Text typing animation
+- **FadeIn** - Smooth fade-in effects
+
 ### Layout Components
 - **BottomNav** - Bottom navigation bar
-- **TopBar** - Top navigation bar (optional)
+
+## 📱 Mobile Optimization
+
+All text sizes are optimized for mobile devices with responsive breakpoints:
+- Small screens: Base mobile sizes
+- Medium screens: `sm:` breakpoint (640px+)
+- Large screens: `md:` breakpoint (768px+)
 
 ## 🚀 Deployment
 
@@ -231,8 +250,8 @@ az webapp deploy
 3. **Add Authentication**: User authentication and profiles
 4. **Add Database**: Store user data, progress, settings
 5. **Add PWA**: Make it installable
-6. **Add Dark Mode**: Implement dark mode
-7. **Add Animations**: Enhance animations
+6. **Add Dark Mode**: Implement dark mode toggle
+7. **Enhance Animations**: Add more scroll animations
 8. **Add Testing**: Unit and integration tests
 9. **Add CI/CD**: Automated deployment
 10. **Add Analytics**: Track user engagement
@@ -248,8 +267,8 @@ az webapp deploy
 ## 📞 Support
 
 - **Email**: support@jainverse.com
-- **GitHub**: https://github.com/jainverse
-- **Documentation**: https://docs.jainverse.com
+- **GitHub**: https://github.com/daanish-mehra/JainVerse
+- **Website**: https://jainverse.app (Coming Soon)
 
 ## 🙏 Acknowledgments
 
@@ -260,3 +279,5 @@ az webapp deploy
 ---
 
 **Built with ❤️ for the Jain Hackathon 2025**
+
+**JainAI** - Mobile App | **JainVerse** - Platform Website
