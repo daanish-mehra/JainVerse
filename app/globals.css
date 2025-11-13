@@ -51,10 +51,11 @@
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
@@ -66,15 +67,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-ivory-100;
+  background-color: #FFF8E7;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-saffron-300 rounded-full;
+  background-color: #FFD699;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-saffron-400;
+  background-color: #FFC47A;
 }
 
 
@@ -106,17 +108,32 @@
 
 
 .text-gradient {
-  @apply bg-gradient-to-r from-saffron-500 to-gold-500 bg-clip-text text-transparent;
+  background: linear-gradient(to right, #F5B041, #FFD700);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
-
 
 .btn-hover {
-  @apply transition-all duration-300 hover:scale-105 hover:shadow-spiritual active:scale-95;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.btn-hover:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 40px rgba(245, 176, 65, 0.2);
+}
+
+.btn-hover:active {
+  transform: scale(0.95);
+}
 
 .card-hover {
-  @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
 }
 
 
@@ -133,4 +150,21 @@
 
 .pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
 }

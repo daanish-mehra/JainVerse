@@ -1,11 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MessageCircle, BookOpen, Heart, Book, Mic, Sparkles } from "lucide-react";
+import { MessageCircle, BookOpen, Heart, Book, Mic, Sparkles, ArrowDown } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
+import { Typewriter } from "@/components/animations/Typewriter";
+import { FadeIn } from "@/components/animations/FadeIn";
 
 const dailyWisdom = {
   quote: "Ahimsa is the highest virtue",
@@ -14,243 +17,329 @@ const dailyWisdom = {
 };
 
 const quickActions = [
-  { icon: MessageCircle, label: "Chat", href: "/chat", color: "from-saffron-400 to-saffron-600" },
-  { icon: BookOpen, label: "Learn", href: "/learn", color: "from-jainGreen-400 to-jainGreen-600" },
-  { icon: Heart, label: "Practice", href: "/practice", color: "from-gold-400 to-gold-600" },
-  { icon: Book, label: "Stories", href: "/stories", color: "from-purple-400 to-purple-600" },
-  { icon: Mic, label: "Pronounce", href: "/pronounce", color: "from-blue-400 to-blue-600" },
-  { icon: Sparkles, label: "Social", href: "/social", color: "from-pink-400 to-pink-600" },
+  { icon: MessageCircle, label: "Chat", href: "/chat", color: "from-saffron-400 to-saffron-600", description: "Ask questions about Jain philosophy" },
+  { icon: BookOpen, label: "Learn", href: "/learn", color: "from-jainGreen-400 to-jainGreen-600", description: "Interactive lessons and quizzes" },
+  { icon: Heart, label: "Practice", href: "/practice", color: "from-gold-400 to-gold-600", description: "Track your spiritual practices" },
+  { icon: Book, label: "Stories", href: "/stories", color: "from-purple-400 to-purple-600", description: "Inspiring Jain stories" },
+  { icon: Mic, label: "Pronounce", href: "/pronounce", color: "from-blue-400 to-blue-600", description: "Learn proper pronunciation" },
+  { icon: Sparkles, label: "Social", href: "/social", color: "from-pink-400 to-pink-600", description: "Create content" },
 ];
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen pb-20 bg-gradient-to-br from-ivory-50 via-white to-saffron-50">
-      {}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative overflow-hidden bg-gradient-spiritual pt-12 pb-8 px-6 rounded-b-3xl"
-      >
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
-        <div className="relative z-10">
-          <motion.h1
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="text-4xl font-bold text-white mb-2 font-display"
-          >
-            🕉️ JainVerse
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-            className="text-ivory-100 text-lg mb-4"
-          >
-            Where Ancient Wisdom Meets Modern AI
-          </motion.p>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="text-white/90 text-sm"
-          >
-            Good {new Date().getHours() < 12 ? "Morning" : new Date().getHours() < 18 ? "Afternoon" : "Evening"}! 🙏
-          </motion.p>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
-            className="text-white/80 text-xs mt-1"
-          >
-            {formatDate(new Date())}
-          </motion.p>
-        </div>
-      </motion.div>
-
-      <div className="px-6 py-6 space-y-6">
-        {}
+    <div className="min-h-screen pb-20 bg-gradient-to-b from-white via-ivory-50 to-white">
+      <div className="relative overflow-hidden">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
+          initial={{ opacity: 0, scale: 1.1 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+          className="relative min-h-screen flex flex-col items-center justify-center px-6 py-20 bg-gradient-to-br from-saffron-50 via-white to-gold-50"
         >
-          <Card className="bg-gradient-saffron border-0 shadow-spiritual overflow-hidden">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-white text-xl">💡 Daily Jain Reflection</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-white text-lg font-semibold italic">
-                "{dailyWisdom.quote}"
-              </p>
-              <p className="text-white/90 text-sm">— {dailyWisdom.author}</p>
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 mt-3">
-                <p className="text-white text-sm leading-relaxed">
-                  {dailyWisdom.explanation}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(245,176,65,0.1),transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,215,0,0.1),transparent_50%)]" />
+          
+          <div className="relative z-10 max-w-4xl mx-auto text-center space-y-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="space-y-6"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.4, type: "spring", stiffness: 200 }}
+                className="text-8xl mb-4"
+              >
+                🕉️
+              </motion.div>
+              
+              <h1 className="text-6xl md:text-7xl font-bold font-display mb-6">
+                <Typewriter
+                  text="JainVerse"
+                  speed={100}
+                  delay={0.6}
+                  className="bg-gradient-to-r from-saffron-600 via-gold-500 to-saffron-600 bg-clip-text text-transparent bg-[length:200%_auto] animate-[shimmer_3s_infinite]"
+                />
+              </h1>
+              
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay: 1.5 }}
+                className="text-2xl md:text-3xl text-gray-700 font-light leading-relaxed"
+              >
+                Where Ancient Wisdom
+                <br />
+                <span className="text-saffron-600 font-medium">Meets Modern AI</span>
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 2 }}
+                className="pt-8"
+              >
+                <p className="text-lg text-gray-600 mb-2">
+                  Good {new Date().getHours() < 12 ? "Morning" : new Date().getHours() < 18 ? "Afternoon" : "Evening"}! 🙏
                 </p>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+                <p className="text-sm text-gray-500">
+                  {formatDate(new Date())}
+                </p>
+              </motion.div>
 
-        {}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-        >
-          <h2 className="text-xl font-bold text-foreground mb-4">🎯 Quick Actions</h2>
-          <div className="grid grid-cols-3 gap-4">
-            {quickActions.map((action, index) => {
-              const Icon = action.icon;
-              return (
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 2.5 }}
+                className="pt-8"
+              >
                 <motion.div
-                  key={action.label}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.5 + index * 0.1, duration: 0.3 }}
-                  whileHover={{ scale: 1.05 }}
+                  animate={{ y: [0, 10, 0] }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  className="inline-block"
+                >
+                  <ArrowDown className="w-8 h-8 text-saffron-500" />
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          </div>
+        </motion.div>
+      </div>
+
+      <div className="px-6 py-16 space-y-24 max-w-6xl mx-auto">
+        <ScrollReveal direction="up" delay={0}>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
+              Learn. Reconnect. Remember.
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Short teachings, small actions, and plain-language wisdom help you feel better now—without jargon or gatekeeping.
+            </p>
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal direction="up" delay={0.2}>
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-saffron-100/50 via-transparent to-gold-100/50 rounded-3xl blur-3xl" />
+            <Card className="relative bg-white/80 backdrop-blur-sm border-0 shadow-xl overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-saffron-400 via-gold-400 to-saffron-400" />
+              <CardHeader className="pb-4">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
+                    💡 Daily Jain Reflection
+                  </CardTitle>
+                </motion.div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="text-2xl md:text-3xl font-light italic text-gray-800 leading-relaxed"
+                >
+                  "{dailyWisdom.quote}"
+                </motion.p>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  className="text-lg text-saffron-600 font-medium"
+                >
+                  — {dailyWisdom.author}
+                </motion.p>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, delay: 0.6 }}
+                  className="bg-gradient-to-br from-saffron-50 to-gold-50 rounded-2xl p-6 border border-saffron-100"
+                >
+                  <p className="text-gray-700 leading-relaxed">
+                    {dailyWisdom.explanation}
+                  </p>
+                </motion.div>
+              </CardContent>
+            </Card>
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal direction="up" delay={0.1}>
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center">
+              App Features
+            </h2>
+            <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+              Short, friendly ways to learn Jain principles, ethics, and practices.
+            </p>
+          </div>
+        </ScrollReveal>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {quickActions.map((action, index) => {
+            const Icon = action.icon;
+            return (
+              <ScrollReveal key={action.label} direction="up" delay={index * 0.1}>
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -8 }}
                   whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 300 }}
                 >
                   <Link href={action.href}>
-                    <Card className="card-hover cursor-pointer border-2 border-transparent hover:border-saffron-200 hover:shadow-lg transition-all duration-300">
-                      <CardContent className="flex flex-col items-center justify-center p-6 space-y-2">
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center shadow-md`}>
-                          <Icon className="w-6 h-6 text-white" />
+                    <Card className="h-full group cursor-pointer border-2 border-transparent hover:border-saffron-200 transition-all duration-300 bg-white hover:shadow-2xl relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-white to-gray-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <CardContent className="p-8 space-y-4 relative z-10">
+                        <motion.div
+                          whileHover={{ rotate: [0, -10, 10, -10, 0] }}
+                          transition={{ duration: 0.5 }}
+                          className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${action.color} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300`}
+                        >
+                          <Icon className="w-8 h-8 text-white" />
+                        </motion.div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-saffron-600 transition-colors">
+                            {action.label}
+                          </h3>
+                          <p className="text-sm text-gray-600 leading-relaxed">
+                            {action.description}
+                          </p>
                         </div>
-                        <span className="text-sm font-semibold text-foreground text-center">
-                          {action.label}
-                        </span>
                       </CardContent>
                     </Card>
                   </Link>
                 </motion.div>
-              );
-            })}
+              </ScrollReveal>
+            );
+          })}
+        </div>
+
+        <ScrollReveal direction="up" delay={0.3}>
+          <div className="bg-gradient-to-br from-saffron-50 via-white to-gold-50 rounded-3xl p-12 border border-saffron-100">
+            <div className="max-w-3xl mx-auto text-center space-y-6">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+                Today's Practices
+              </h2>
+              <p className="text-lg text-gray-600">
+                Your spiritual journey, one step at a time.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+                {[
+                  { icon: "🌅", title: "Morning Prayer", time: "6:30 AM", status: "completed" },
+                  { icon: "🧘", title: "Meditation", time: "7:00 AM", status: "pending" },
+                  { icon: "📖", title: "Scripture Reading", time: "8:00 AM", status: "scheduled" },
+                  { icon: "🍽️", title: "Fasting: Ekasan", time: "Today", status: "active" },
+                ].map((practice, idx) => (
+                  <FadeIn key={idx} delay={idx * 0.1}>
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                        practice.status === "completed"
+                          ? "bg-green-50 border-green-200"
+                          : practice.status === "active"
+                          ? "bg-purple-50 border-purple-200"
+                          : "bg-white border-gray-200"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-3xl">{practice.icon}</span>
+                          <div>
+                            <p className="font-semibold text-gray-900">{practice.title}</p>
+                            <p className="text-sm text-gray-600">{practice.time}</p>
+                          </div>
+                        </div>
+                        <span className="text-2xl">
+                          {practice.status === "completed" && "✅"}
+                          {practice.status === "pending" && "⏰"}
+                          {practice.status === "active" && "🔒"}
+                          {practice.status === "scheduled" && "📅"}
+                        </span>
+                      </div>
+                    </motion.div>
+                  </FadeIn>
+                ))}
+              </div>
+            </div>
           </div>
-        </motion.div>
+        </ScrollReveal>
 
-        {}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
-        >
-          <Card className="border-saffron-200">
-            <CardHeader>
-              <CardTitle className="text-lg">📅 Today's Practices</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">🌅</span>
-                  <div>
-                    <p className="font-semibold text-sm">Morning Prayer</p>
-                    <p className="text-xs text-muted-foreground">6:30 AM</p>
+        <ScrollReveal direction="up" delay={0.2}>
+          <div className="text-center space-y-8 py-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+              Progress Today
+            </h2>
+            <div className="max-w-md mx-auto space-y-6">
+              {[
+                { label: "Practices", value: 80, color: "from-saffron-400 to-saffron-600" },
+                { label: "Learning", value: 70, color: "from-jainGreen-400 to-jainGreen-600" },
+              ].map((item, idx) => (
+                <FadeIn key={idx} delay={idx * 0.2}>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-medium text-gray-700">{item.label}</span>
+                      <span className="font-bold text-gray-900">{item.value}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        whileInView={{ width: `${item.value}%` }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 1, delay: idx * 0.2, ease: "easeOut" }}
+                        className={`h-full bg-gradient-to-r ${item.color} rounded-full`}
+                      />
+                    </div>
                   </div>
+                </FadeIn>
+              ))}
+              <FadeIn delay={0.4}>
+                <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+                  <span className="text-lg font-medium text-gray-900">🔥 Streak</span>
+                  <span className="text-2xl font-bold text-saffron-600">7 days</span>
                 </div>
-                <span className="text-green-600">✅</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-saffron-50 rounded-lg border border-saffron-200">
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">🧘</span>
-                  <div>
-                    <p className="font-semibold text-sm">Meditation</p>
-                    <p className="text-xs text-muted-foreground">7:00 AM - Reminder in 10 min</p>
-                  </div>
-                </div>
-                <span className="text-saffron-600">⏰</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">📖</span>
-                  <div>
-                    <p className="font-semibold text-sm">Scripture Reading</p>
-                    <p className="text-xs text-muted-foreground">8:00 AM</p>
-                  </div>
-                </div>
-                <span className="text-blue-600">📅</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200">
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">🍽️</span>
-                  <div>
-                    <p className="font-semibold text-sm">Fasting: Ekasan</p>
-                    <p className="text-xs text-muted-foreground">Today</p>
-                  </div>
-                </div>
-                <span className="text-purple-600">🔒</span>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.5 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">📊 Progress Today</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="font-medium">Practices</span>
-                  <span className="text-saffron-600 font-semibold">80%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: "80%" }}
-                    transition={{ delay: 0.8, duration: 1 }}
-                    className="bg-gradient-saffron h-2.5 rounded-full"
-                  />
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="font-medium">Learning</span>
-                  <span className="text-jainGreen-600 font-semibold">70%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: "70%" }}
-                    transition={{ delay: 0.9, duration: 1 }}
-                    className="bg-gradient-to-r from-jainGreen-400 to-jainGreen-600 h-2.5 rounded-full"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center justify-between pt-2 border-t">
-                <span className="font-medium">🔥 Streak</span>
-                <span className="text-saffron-600 font-bold text-lg">7 days</span>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {}
-        <motion.div
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 1, duration: 0.5 }}
-          className="fixed bottom-24 right-6 z-40"
-        >
-          <Link href="/chat">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="w-14 h-14 rounded-full bg-gradient-saffron text-white shadow-spiritual flex items-center justify-center pulse-glow"
-            >
-              <MessageCircle className="w-6 h-6" />
-            </motion.button>
-          </Link>
-        </motion.div>
+              </FadeIn>
+            </div>
+          </div>
+        </ScrollReveal>
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 3 }}
+        className="fixed bottom-24 right-6 z-40"
+      >
+        <Link href="/chat">
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            whileTap={{ scale: 0.9 }}
+            className="w-16 h-16 rounded-full bg-gradient-to-br from-saffron-400 to-gold-500 text-white shadow-2xl flex items-center justify-center relative overflow-hidden group"
+          >
+            <motion.div
+              className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20"
+              animate={{
+                scale: [1, 1.5, 1],
+                opacity: [0, 0.3, 0],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+              }}
+            />
+            <MessageCircle className="w-7 h-7 relative z-10" />
+          </motion.button>
+        </Link>
+      </motion.div>
     </div>
   );
 }
