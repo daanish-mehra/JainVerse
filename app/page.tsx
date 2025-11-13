@@ -45,15 +45,6 @@ export default function HomePage() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="space-y-6"
             >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.4, type: "spring", stiffness: 200 }}
-                className="text-6xl sm:text-7xl md:text-8xl mb-2 sm:mb-4"
-              >
-                🕉️
-              </motion.div>
-              
               <motion.h1
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
