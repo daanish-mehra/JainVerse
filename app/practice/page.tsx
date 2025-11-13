@@ -77,7 +77,7 @@ export default function PracticePage() {
           <motion.h1
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-3xl font-bold bg-gradient-to-r from-saffron-600 to-gold-500 bg-clip-text text-transparent"
+            className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-saffron-600 to-gold-500 bg-clip-text text-transparent"
           >
             🧘 Practice
           </motion.h1>
@@ -95,10 +95,10 @@ export default function PracticePage() {
       <div className="px-6 py-12 space-y-16 max-w-4xl mx-auto">
         <ScrollReveal direction="up" delay={0}>
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-gray-900">
               Today's Practices
             </h2>
-            <p className="text-lg text-gray-600 mb-8">
+            <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
               Your spiritual routine for today
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -120,7 +120,7 @@ export default function PracticePage() {
                         <motion.span
                           animate={{ rotate: [0, 10, -10, 0] }}
                           transition={{ duration: 2, repeat: Infinity, delay: index * 0.5 }}
-                          className="text-4xl"
+                          className="text-3xl sm:text-4xl"
                         >
                           {practice.icon}
                         </motion.span>
@@ -154,11 +154,11 @@ export default function PracticePage() {
             <div className="absolute inset-0 bg-gradient-to-r from-saffron-100/50 via-transparent to-gold-100/50 rounded-3xl blur-3xl" />
             <Card className="relative border-2 border-saffron-200 bg-white/80 backdrop-blur-sm shadow-xl">
               <CardHeader>
-                <CardTitle className="text-2xl font-bold text-gray-900 flex items-center">
-                  <Target className="w-6 h-6 mr-3 text-saffron-600" />
+                <CardTitle className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+                  <Target className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-saffron-600" />
                   Vrata Tracker
                 </CardTitle>
-                <CardDescription className="text-base">
+                <CardDescription className="text-sm sm:text-base">
                   Track your spiritual commitments
                 </CardDescription>
               </CardHeader>
@@ -209,7 +209,7 @@ export default function PracticePage() {
             <Card className="relative bg-gradient-to-br from-jainGreen-50 to-teal-50 border-2 border-jainGreen-200 shadow-xl">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-jainGreen-400 via-teal-400 to-jainGreen-500" />
               <CardHeader>
-                <CardTitle className="text-2xl font-bold text-gray-900">🗓️ Fasting Schedule</CardTitle>
+                <CardTitle className="text-xl sm:text-2xl font-bold text-gray-900">🗓️ Fasting Schedule</CardTitle>
                 <CardDescription className="text-base">This Week</CardDescription>
               </CardHeader>
               <CardContent>
@@ -240,7 +240,7 @@ export default function PracticePage() {
             <Card className="relative bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 shadow-xl">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500" />
               <CardHeader>
-                <CardTitle className="text-2xl font-bold text-gray-900">💭 Reflections</CardTitle>
+                <CardTitle className="text-xl sm:text-2xl font-bold text-gray-900">💭 Reflections</CardTitle>
                 <CardDescription className="text-base">Daily Reflection</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -261,7 +261,7 @@ export default function PracticePage() {
 
         <ScrollReveal direction="up" delay={0.5}>
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-gray-900">
               Progress
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -281,7 +281,7 @@ export default function PracticePage() {
                         <Icon className={`w-6 h-6 text-${stat.color}-600`} />
                         <span className="text-sm font-medium text-gray-600">{stat.label}</span>
                       </div>
-                      <p className={`text-2xl font-bold text-${stat.color}-600`}>
+                      <p className={`text-xl sm:text-2xl font-bold text-${stat.color}-600`}>
                         {stat.value}
                       </p>
                     </motion.div>

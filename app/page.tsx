@@ -49,7 +49,7 @@ export default function HomePage() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.4, type: "spring", stiffness: 200 }}
-                className="text-8xl mb-4"
+                className="text-6xl sm:text-7xl md:text-8xl mb-2 sm:mb-4"
               >
                 🕉️
               </motion.div>
@@ -58,10 +58,10 @@ export default function HomePage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
-                className="text-6xl md:text-7xl font-bold font-display mb-6 bg-gradient-to-r from-saffron-600 via-gold-500 to-saffron-600 bg-clip-text text-transparent bg-[length:200%_auto] animate-[shimmer_3s_infinite]"
+                className="text-5xl sm:text-6xl md:text-7xl font-bold font-display mb-4 bg-gradient-to-r from-saffron-600 via-gold-500 to-saffron-600 bg-clip-text text-transparent bg-[length:200%_auto] animate-[shimmer_3s_infinite] leading-tight"
               >
                 <Typewriter
-                  text="JainVerse"
+                  text="JainAI"
                   speed={100}
                   delay={0.6}
                 />
@@ -71,23 +71,31 @@ export default function HomePage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 1, delay: 1.5 }}
-                className="text-2xl md:text-3xl text-gray-700 font-light leading-relaxed"
+                className="text-lg sm:text-xl md:text-2xl text-gray-700 font-light leading-relaxed px-2"
               >
-                Where Ancient Wisdom
-                <br />
-                <span className="text-saffron-600 font-medium">Meets Modern AI</span>
+                Mobile App for{" "}
+                <span className="text-saffron-600 font-medium">JainVerse</span>
+              </motion.p>
+              
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay: 1.8 }}
+                className="text-base sm:text-lg text-gray-600 leading-relaxed px-4 max-w-md mx-auto"
+              >
+                Where Ancient Wisdom Meets Modern AI
               </motion.p>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 2 }}
-                className="pt-8"
+                className="pt-6"
               >
-                <p className="text-lg text-gray-600 mb-2">
+                <p className="text-base sm:text-lg text-gray-600 mb-1">
                   Good {new Date().getHours() < 12 ? "Morning" : new Date().getHours() < 18 ? "Afternoon" : "Evening"}! 🙏
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-xs sm:text-sm text-gray-500">
                   {formatDate(new Date())}
                 </p>
               </motion.div>
@@ -117,11 +125,11 @@ export default function HomePage() {
 
       <div className="px-6 py-16 space-y-24 max-w-6xl mx-auto">
         <ScrollReveal direction="up" delay={0}>
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 text-gray-900 px-4">
               Learn. Reconnect. Remember.
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto px-4">
               Short teachings, small actions, and plain-language wisdom help you feel better now—without jargon or gatekeeping.
             </p>
           </div>
@@ -139,7 +147,7 @@ export default function HomePage() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.6 }}
                 >
-                  <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
+                  <CardTitle className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                     💡 Daily Jain Reflection
                   </CardTitle>
                 </motion.div>
@@ -150,7 +158,7 @@ export default function HomePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.8, delay: 0.2 }}
-                  className="text-2xl md:text-3xl font-light italic text-gray-800 leading-relaxed"
+                  className="text-xl sm:text-2xl md:text-3xl font-light italic text-gray-800 leading-relaxed px-2"
                 >
                   "{dailyWisdom.quote}"
                 </motion.p>
@@ -159,7 +167,7 @@ export default function HomePage() {
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.8, delay: 0.4 }}
-                  className="text-lg text-saffron-600 font-medium"
+                  className="text-base sm:text-lg text-saffron-600 font-medium"
                 >
                   — {dailyWisdom.author}
                 </motion.p>
@@ -168,9 +176,9 @@ export default function HomePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.8, delay: 0.6 }}
-                  className="bg-gradient-to-br from-saffron-50 to-gold-50 rounded-2xl p-6 border border-saffron-100"
+                  className="bg-gradient-to-br from-saffron-50 to-gold-50 rounded-2xl p-4 sm:p-6 border border-saffron-100"
                 >
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
                     {dailyWisdom.explanation}
                   </p>
                 </motion.div>
@@ -181,10 +189,10 @@ export default function HomePage() {
 
         <ScrollReveal direction="up" delay={0.1}>
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 sm:mb-3 text-center px-4">
               App Features
             </h2>
-            <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base text-gray-600 text-center mb-8 sm:mb-12 max-w-2xl mx-auto px-4">
               Short, friendly ways to learn Jain principles, ethics, and practices.
             </p>
           </div>
@@ -212,10 +220,10 @@ export default function HomePage() {
                           <Icon className="w-8 h-8 text-white" />
                         </motion.div>
                         <div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-saffron-600 transition-colors">
+                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2 group-hover:text-saffron-600 transition-colors">
                             {action.label}
                           </h3>
-                          <p className="text-sm text-gray-600 leading-relaxed">
+                          <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
                             {action.description}
                           </p>
                         </div>
@@ -229,12 +237,12 @@ export default function HomePage() {
         </div>
 
         <ScrollReveal direction="up" delay={0.3}>
-          <div className="bg-gradient-to-br from-saffron-50 via-white to-gold-50 rounded-3xl p-12 border border-saffron-100">
-            <div className="max-w-3xl mx-auto text-center space-y-6">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+          <div className="bg-gradient-to-br from-saffron-50 via-white to-gold-50 rounded-3xl p-6 sm:p-8 md:p-12 border border-saffron-100">
+            <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
                 Today's Practices
               </h2>
-              <p className="text-lg text-gray-600">
+              <p className="text-base sm:text-lg text-gray-600">
                 Your spiritual journey, one step at a time.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
@@ -259,8 +267,8 @@ export default function HomePage() {
                         <div className="flex items-center space-x-3">
                           <span className="text-3xl">{practice.icon}</span>
                           <div>
-                            <p className="font-semibold text-gray-900">{practice.title}</p>
-                            <p className="text-sm text-gray-600">{practice.time}</p>
+                            <p className="font-semibold text-sm sm:text-base text-gray-900">{practice.title}</p>
+                            <p className="text-xs sm:text-sm text-gray-600">{practice.time}</p>
                           </div>
                         </div>
                         <span className="text-2xl">
@@ -279,8 +287,8 @@ export default function HomePage() {
         </ScrollReveal>
 
         <ScrollReveal direction="up" delay={0.2}>
-          <div className="text-center space-y-8 py-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+          <div className="text-center space-y-6 sm:space-y-8 py-8 sm:py-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 px-4">
               Progress Today
             </h2>
             <div className="max-w-md mx-auto space-y-6">
@@ -307,9 +315,9 @@ export default function HomePage() {
                 </FadeIn>
               ))}
               <FadeIn delay={0.4}>
-                <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-                  <span className="text-lg font-medium text-gray-900">🔥 Streak</span>
-                  <span className="text-2xl font-bold text-saffron-600">7 days</span>
+                <div className="flex items-center justify-between pt-4 sm:pt-6 border-t border-gray-200">
+                  <span className="text-base sm:text-lg font-medium text-gray-900">🔥 Streak</span>
+                  <span className="text-xl sm:text-2xl font-bold text-saffron-600">7 days</span>
                 </div>
               </FadeIn>
             </div>
