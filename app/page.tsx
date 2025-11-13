@@ -54,14 +54,18 @@ export default function HomePage() {
                 🕉️
               </motion.div>
               
-              <h1 className="text-6xl md:text-7xl font-bold font-display mb-6">
+              <motion.h1
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="text-6xl md:text-7xl font-bold font-display mb-6 bg-gradient-to-r from-saffron-600 via-gold-500 to-saffron-600 bg-clip-text text-transparent bg-[length:200%_auto] animate-[shimmer_3s_infinite]"
+              >
                 <Typewriter
                   text="JainVerse"
                   speed={100}
                   delay={0.6}
-                  className="bg-gradient-to-r from-saffron-600 via-gold-500 to-saffron-600 bg-clip-text text-transparent bg-[length:200%_auto] animate-[shimmer_3s_infinite]"
                 />
-              </h1>
+              </motion.h1>
               
               <motion.p
                 initial={{ opacity: 0 }}

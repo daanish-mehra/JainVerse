@@ -23,27 +23,28 @@ export function Typewriter({
   const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
-    if (currentIndex < text.length) {
+    const startTimeout = setTimeout(() => {
+      setCurrentIndex(0);
+      setDisplayedText("");
+      setIsComplete(false);
+    }, delay);
+
+    return () => clearTimeout(startTimeout);
+  }, [delay, text]);
+
+  useEffect(() => {
+    if (currentIndex < text.length && displayedText.length === currentIndex) {
       const timeout = setTimeout(() => {
         setDisplayedText((prev) => prev + text[currentIndex]);
         setCurrentIndex((prev) => prev + 1);
       }, speed);
 
       return () => clearTimeout(timeout);
-    } else if (!isComplete) {
+    } else if (currentIndex >= text.length && !isComplete) {
       setIsComplete(true);
       onComplete?.();
     }
-  }, [currentIndex, text, speed, isComplete, onComplete]);
-
-  useEffect(() => {
-    const startTimeout = setTimeout(() => {
-      setCurrentIndex(0);
-      setDisplayedText("");
-    }, delay);
-
-    return () => clearTimeout(startTimeout);
-  }, [delay]);
+  }, [currentIndex, text, speed, isComplete, onComplete, displayedText]);
 
   return (
     <motion.span
