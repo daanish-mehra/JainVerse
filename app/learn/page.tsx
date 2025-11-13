@@ -107,7 +107,7 @@ export default function LearnPage() {
           <motion.h1
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-3xl font-bold bg-gradient-to-r from-saffron-600 to-gold-500 bg-clip-text text-transparent"
+            className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-saffron-600 to-gold-500 bg-clip-text text-transparent"
           >
             📚 Learn
           </motion.h1>
@@ -115,11 +115,11 @@ export default function LearnPage() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="flex items-center space-x-2 bg-gradient-to-r from-saffron-500 to-gold-500 text-white px-5 py-3 rounded-full shadow-lg"
+            className="flex items-center space-x-2 bg-gradient-to-r from-saffron-500 to-gold-500 text-white px-3 sm:px-5 py-2 sm:py-3 rounded-full shadow-lg"
           >
-            <Trophy className="w-5 h-5" />
-            <span className="font-bold text-lg">{punyaPoints}</span>
-            <span className="text-sm opacity-90">Punya</span>
+            <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="font-bold text-base sm:text-lg">{punyaPoints}</span>
+            <span className="text-xs sm:text-sm opacity-90">Punya</span>
           </motion.div>
         </div>
         <motion.p
@@ -135,10 +135,10 @@ export default function LearnPage() {
       <div className="px-6 py-12 space-y-16 max-w-4xl mx-auto">
         <ScrollReveal direction="up" delay={0}>
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-gray-900">
               Learning Paths
             </h2>
-            <p className="text-lg text-gray-600 mb-8">
+            <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
               Structured courses from beginner to advanced
             </p>
             <div className="space-y-6">
@@ -195,11 +195,11 @@ export default function LearnPage() {
             <Card className="relative bg-gradient-to-br from-jainGreen-50 to-teal-50 border-2 border-jainGreen-200 shadow-xl overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-jainGreen-400 via-teal-400 to-jainGreen-500" />
               <CardHeader>
-                <CardTitle className="text-2xl font-bold flex items-center text-gray-900">
-                  <Brain className="w-6 h-6 mr-3 text-jainGreen-600" />
+                <CardTitle className="text-xl sm:text-2xl font-bold flex items-center text-gray-900">
+                  <Brain className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-jainGreen-600" />
                   Daily Quiz
                 </CardTitle>
-                <CardDescription className="text-base">
+                <CardDescription className="text-sm sm:text-base">
                   Test your knowledge with today's quiz
                 </CardDescription>
               </CardHeader>
@@ -213,7 +213,7 @@ export default function LearnPage() {
                     transition={{ duration: 0.6 }}
                     className="space-y-4"
                   >
-                    <p className="font-bold text-xl text-gray-900">❓ {quiz.question}</p>
+                    <p className="font-bold text-lg sm:text-xl text-gray-900">❓ {quiz.question}</p>
                     <div className="space-y-3">
                       {quiz.options.map((option, index) => (
                         <motion.button
@@ -280,10 +280,10 @@ export default function LearnPage() {
 
         <ScrollReveal direction="up" delay={0.3}>
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-gray-900">
               Stories & Moral Dilemmas
             </h2>
-            <p className="text-lg text-gray-600 mb-8">
+            <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
               Engaging stories for different age groups
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -340,10 +340,10 @@ export default function LearnPage() {
 
         <ScrollReveal direction="up" delay={0.4}>
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-gray-900">
               Achievements
             </h2>
-            <p className="text-lg text-gray-600 mb-8">
+            <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
               Your accomplishments on your spiritual journey
             </p>
             <div className="grid grid-cols-1 gap-4">
@@ -366,11 +366,11 @@ export default function LearnPage() {
                             whileInView={{ scale: 1, rotate: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: index * 0.1, type: "spring", stiffness: 200 }}
-                            className="text-4xl"
+                            className="text-3xl sm:text-4xl"
                           >
                             {achievement.icon}
                           </motion.span>
-                          <span className={cn("font-bold text-lg", achievement.earned ? "text-gray-900" : "text-gray-500")}>
+                          <span className={cn("font-bold text-base sm:text-lg", achievement.earned ? "text-gray-900" : "text-gray-500")}>
                             {achievement.title}
                           </span>
                         </div>

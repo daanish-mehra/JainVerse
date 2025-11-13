@@ -24,7 +24,7 @@ export default function ChatPage() {
     {
       id: 1,
       type: "bot",
-      text: "🙏 Welcome to JainVerse! I'm your AI companion for learning about Jain philosophy, ethics, and practices. How can I help you today?",
+              text: "🙏 Welcome to JainAI! Your mobile companion for JainVerse. I'm here to help you learn about Jain philosophy, ethics, and practices. How can I help you today?",
       timestamp: new Date(),
     },
   ]);
@@ -78,9 +78,9 @@ export default function ChatPage() {
             <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="text-3xl font-bold bg-gradient-to-r from-saffron-600 to-gold-500 bg-clip-text text-transparent"
+              className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-saffron-600 to-gold-500 bg-clip-text text-transparent"
             >
-              💬 JainGPT
+              💬 JainAI Chat
             </motion.h1>
             <div className="flex items-center space-x-2">
               <select
