@@ -189,7 +189,7 @@ export default function HomePage() {
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
           {quickActions.map((action, index) => {
             const Icon = action.icon;
             return (
@@ -200,21 +200,21 @@ export default function HomePage() {
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   <Link href={action.href}>
-                    <Card className="h-full group cursor-pointer border-2 border-transparent hover:border-saffron-200 transition-all duration-300 bg-white hover:shadow-2xl relative overflow-hidden">
+                    <Card className="h-full group cursor-pointer border-2 border-transparent hover:border-saffron-200 transition-all duration-300 bg-white hover:shadow-2xl relative overflow-hidden flex flex-col">
                       <div className="absolute inset-0 bg-gradient-to-br from-white to-gray-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <CardContent className="p-8 space-y-4 relative z-10">
+                      <CardContent className="p-6 sm:p-8 space-y-4 relative z-10 flex flex-col flex-1">
                         <motion.div
                           whileHover={{ rotate: [0, -10, 10, -10, 0] }}
                           transition={{ duration: 0.5 }}
-                          className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${action.color} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300`}
+                          className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${action.color} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300 flex-shrink-0`}
                         >
-                          <Icon className="w-8 h-8 text-white" />
+                          <Icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
                         </motion.div>
-                        <div>
-                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2 group-hover:text-saffron-600 transition-colors">
+                        <div className="flex-1 flex flex-col">
+                          <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-2 group-hover:text-saffron-600 transition-colors break-words">
                             {action.label}
                           </h3>
-                          <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                          <p className="text-xs sm:text-sm text-gray-600 leading-relaxed break-words overflow-wrap-anywhere flex-1">
                             {action.description}
                           </p>
                         </div>
