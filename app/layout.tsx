@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   title: "JainVerse - Where Ancient Wisdom Meets Modern AI",
   description: "An AI-powered interactive app for learning and practicing Jain philosophy, ethics, and rituals.",
   manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
   themeColor: "#F5B041",
 };
 
