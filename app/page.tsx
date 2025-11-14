@@ -19,44 +19,54 @@ interface DailyQuote {
 
 const jainQuotes = [
   {
-    quote: "Ahimsa is the highest virtue",
+    quote: "Ahimsa paramo dharma - Non-violence is the highest religion",
     author: "Mahavira",
-    explanation: "Non-violence towards all living beings is the fundamental principle of Jainism. It means not causing harm through thought, word, or deed.",
+    explanation: "Non-violence towards all living beings is the fundamental principle of Jainism. It means not causing harm through thought, word, or deed to any sentient being.",
   },
   {
-    quote: "Live and let live",
-    author: "Jain Proverb",
-    explanation: "This principle emphasizes respecting all life forms and allowing them to exist peacefully without interference.",
+    quote: "Jivo jivasya jivanam - One living being is the sustenance of another",
+    author: "Acharya Kundakunda",
+    explanation: "This principle emphasizes the interdependence of all life forms and respecting all living beings while understanding their natural roles in the ecosystem.",
   },
   {
-    quote: "The soul is the master of its own destiny",
+    quote: "The soul is the master of its own destiny through right conduct, right knowledge, and right faith",
+    author: "Tattvarth Sutra",
+    explanation: "Every soul has the potential to achieve liberation (moksha) through the three jewels of Jainism: right faith, right knowledge, and right conduct.",
+  },
+  {
+    quote: "Aparigraha - Non-possessiveness leads to inner peace and spiritual freedom",
     author: "Jain Philosophy",
-    explanation: "Every soul has the potential to achieve liberation through right conduct, right knowledge, and right faith.",
+    explanation: "By minimizing attachments to material possessions and desires, one achieves spiritual freedom and tranquility, reducing karmic bondage.",
   },
   {
-    quote: "Non-possessiveness leads to inner peace",
-    author: "Aparigraha Principle",
-    explanation: "By minimizing attachments to material possessions, one achieves spiritual freedom and tranquility.",
+    quote: "Anekantvad - Reality is multifaceted and can be viewed from multiple perspectives",
+    author: "Jain Doctrine",
+    explanation: "The doctrine of non-absolutism teaches that truth and reality are complex and can be understood from various viewpoints, promoting tolerance and understanding.",
   },
   {
-    quote: "Truth is multifaceted",
-    author: "Anekantvad",
-    explanation: "Reality has multiple aspects, and one should consider different perspectives before forming conclusions.",
-  },
-  {
-    quote: "Every living being deserves respect",
+    quote: "Every living being, from the smallest microorganism to the largest being, deserves respect and compassion",
     author: "Jain Ethics",
-    explanation: "From the smallest microorganism to the largest being, all life has intrinsic value and deserves compassion.",
+    explanation: "All life has intrinsic value. Jains practice extreme care to avoid harming even the smallest forms of life, reflecting deep respect for all souls.",
   },
   {
-    quote: "Self-control is the path to liberation",
+    quote: "Samyak Darshan, Samyak Jnana, Samyak Charitra - Right faith, right knowledge, and right conduct lead to liberation",
+    author: "Tattvarth Sutra",
+    explanation: "These three jewels of Jainism are essential for spiritual progress. Together they form the path to moksha, freeing the soul from the cycle of birth and death.",
+  },
+  {
+    quote: "Non-violence begins with non-violent thoughts, as thoughts lead to words and actions",
+    author: "Acharya Umaswati",
+    explanation: "True ahimsa starts in the mind. Controlling harmful thoughts, anger, and negative emotions is as important as controlling harmful actions, preventing karmic accumulation.",
+  },
+  {
+    quote: "Karma is the cause of bondage - actions, thoughts, and words create karma that binds the soul",
+    author: "Tattvarth Sutra",
+    explanation: "Every thought, word, and deed creates karma particles that attach to the soul, keeping it bound to the cycle of samsara. Liberation requires eliminating all karmas.",
+  },
+  {
+    quote: "The five great vows (Mahavratas) are the foundation of Jain spiritual practice",
     author: "Jain Teachings",
-    explanation: "Mastering one's passions and desires through discipline leads to spiritual progress and ultimate freedom.",
-  },
-  {
-    quote: "Non-violence begins with non-violent thoughts",
-    author: "Jain Wisdom",
-    explanation: "True ahimsa starts in the mind - controlling harmful thoughts is as important as controlling harmful actions.",
+    explanation: "Ahimsa (non-violence), Satya (truth), Asteya (non-stealing), Brahmacharya (celibacy), and Aparigraha (non-possessiveness) guide the path to spiritual purity and liberation.",
   },
 ];
 
@@ -77,17 +87,23 @@ export default function HomePage() {
   const [dailyWisdom, setDailyWisdom] = useState<DailyQuote | null>(null);
   const [currentTime, setCurrentTime] = useState<string>("");
   const [greeting, setGreeting] = useState<string>("");
+  const [practices, setPractices] = useState([
+    { icon: "🌅", title: "Morning Prayer", time: "6:30 AM", status: "completed" },
+    { icon: "🧘", title: "Meditation", time: "7:00 AM", status: "pending" },
+    { icon: "📖", title: "Scripture Reading", time: "8:00 AM", status: "scheduled" },
+    { icon: "🍽️", title: "Fasting: Ekasan", time: "Today", status: "active" },
+  ]);
 
   useEffect(() => {
     const fetchQuote = async () => {
       try {
         const response = await fetch('/api/quotes');
         const data = await response.json();
-        if (data.success) {
+        if (data.success && data.quote && data.author) {
           setDailyWisdom({
             quote: data.quote,
             author: data.author,
-            explanation: data.explanation,
+            explanation: data.explanation || 'From Jain scriptures and teachings',
           });
         } else {
           setDailyWisdom(getRandomQuote());
@@ -109,6 +125,12 @@ export default function HomePage() {
     fetchQuote();
     updateTimeAndGreeting();
   }, []);
+
+  const completedPractices = practices.filter(p => p.status === "completed").length;
+  const totalPractices = practices.length;
+  const practicesProgress = totalPractices > 0 ? Math.round((completedPractices / totalPractices) * 100) : 0;
+  const learningProgress = 70;
+  const streak = 7;
   
   return (
     <div className="min-h-screen pb-20 bg-gradient-to-b from-white via-ivory-50 to-white">
@@ -336,17 +358,12 @@ export default function HomePage() {
               <p className="text-base sm:text-lg text-gray-600">
                 Your spiritual journey, one step at a time.
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-                {[
-                  { icon: "🌅", title: "Morning Prayer", time: "6:30 AM", status: "completed" },
-                  { icon: "🧘", title: "Meditation", time: "7:00 AM", status: "pending" },
-                  { icon: "📖", title: "Scripture Reading", time: "8:00 AM", status: "scheduled" },
-                  { icon: "🍽️", title: "Fasting: Ekasan", time: "Today", status: "active" },
-                ].map((practice, idx) => (
+              <div className="space-y-4 mt-8 max-w-2xl mx-auto">
+                {practices.map((practice, idx) => (
                   <FadeIn key={idx} delay={idx * 0.1}>
                     <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                      whileHover={{ scale: 1.02, x: 10 }}
+                      className={`p-5 rounded-xl border-2 transition-all duration-300 ${
                         practice.status === "completed"
                           ? "bg-green-50 border-green-200"
                           : practice.status === "active"
@@ -355,11 +372,11 @@ export default function HomePage() {
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-4">
                           <span className="text-3xl">{practice.icon}</span>
                           <div>
-                            <p className="font-semibold text-sm sm:text-base text-gray-900">{practice.title}</p>
-                            <p className="text-xs sm:text-sm text-gray-600">{practice.time}</p>
+                            <p className="font-semibold text-base text-gray-900">{practice.title}</p>
+                            <p className="text-sm text-gray-600">{practice.time}</p>
                           </div>
                         </div>
                         <span className="text-2xl">
@@ -383,32 +400,47 @@ export default function HomePage() {
               Progress Today
             </h2>
             <div className="max-w-md mx-auto space-y-6">
-              {[
-                { label: "Practices", value: 80, color: "from-saffron-400 to-saffron-600" },
-                { label: "Learning", value: 70, color: "from-jainGreen-400 to-jainGreen-600" },
-              ].map((item, idx) => (
-                <FadeIn key={idx} delay={idx * 0.2}>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium text-gray-700">{item.label}</span>
-                      <span className="font-bold text-gray-900">{item.value}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        whileInView={{ width: `${item.value}%` }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1, delay: idx * 0.2, ease: "easeOut" }}
-                        className={`h-full bg-gradient-to-r ${item.color} rounded-full`}
-                      />
-                    </div>
+              <FadeIn delay={0.1}>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium text-gray-700">Practices</span>
+                    <span className="font-bold text-gray-900">{practicesProgress}%</span>
                   </div>
-                </FadeIn>
-              ))}
-              <FadeIn delay={0.4}>
+                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${practicesProgress}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
+                      className="h-full bg-gradient-to-r from-saffron-400 to-saffron-600 rounded-full"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 text-right">
+                    {completedPractices} of {totalPractices} completed
+                  </p>
+                </div>
+              </FadeIn>
+              <FadeIn delay={0.3}>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium text-gray-700">Learning</span>
+                    <span className="font-bold text-gray-900">{learningProgress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${learningProgress}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
+                      className="h-full bg-gradient-to-r from-jainGreen-400 to-jainGreen-600 rounded-full"
+                    />
+                  </div>
+                </div>
+              </FadeIn>
+              <FadeIn delay={0.5}>
                 <div className="flex items-center justify-between pt-4 sm:pt-6 border-t border-gray-200">
-                  <span className="text-base sm:text-lg font-medium text-gray-900">🔥 Streak</span>
-                  <span className="text-xl sm:text-2xl font-bold text-saffron-600">7 days</span>
+                  <span className="text-base sm:text-lg font-medium text-gray-900">Streak</span>
+                  <span className="text-xl sm:text-2xl font-bold text-saffron-600">{streak} days</span>
                 </div>
               </FadeIn>
             </div>
