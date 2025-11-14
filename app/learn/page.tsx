@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Trophy, BookOpen, Brain, Target, CheckCircle, XCircle, Sparkles } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,91 +9,128 @@ import { cn } from "@/lib/utils";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { FadeIn } from "@/components/animations/FadeIn";
 
-const learningPaths = [
-  {
-    id: 1,
-    title: "Jain Philosophy Basics",
-    progress: 80,
-    badges: 3,
-    totalBadges: 5,
-    level: "Beginner",
-    description: "Learn the fundamental principles of Jainism",
-  },
-  {
-    id: 2,
-    title: "Meditation & Practices",
-    progress: 60,
-    badges: 2,
-    totalBadges: 5,
-    level: "Intermediate",
-    description: "Discover meditation techniques and daily practices",
-  },
-  {
-    id: 3,
-    title: "Mantras & Prayers",
-    progress: 40,
-    badges: 1,
-    totalBadges: 5,
-    level: "Beginner",
-    description: "Master Jain mantras and prayers",
-  },
-];
+interface LearningPath {
+  id: number;
+  title: string;
+  progress: number;
+  badges: number;
+  totalBadges: number;
+  level: string;
+  description: string;
+}
 
-const quizzes = [
-  {
-    id: 1,
-    question: "What is Ahimsa?",
-    options: ["Non-violence", "Truth", "Non-stealing", "Celibacy"],
-    correct: 0,
-  },
-  {
-    id: 2,
-    question: "What are the main principles of Jainism?",
-    options: ["Ahimsa, Satya, Asteya", "Ahimsa, Anekantvad, Aparigraha", "Ahimsa, Karma, Moksha", "All of the above"],
-    correct: 1,
-  },
-];
+interface Quiz {
+  id: number;
+  question: string;
+  options: string[];
+  correct: number;
+  explanation?: string;
+  source?: string;
+  topic?: string;
+}
 
-const stories = [
-  {
-    id: 1,
-    title: "The Story of Mahavira",
-    age: "5-10 years",
-    rating: 4.8,
-    pages: 10,
-  },
-  {
-    id: 2,
-    title: "The Value of Ahimsa",
-    age: "2-5 years",
-    rating: 4.9,
-    pages: 8,
-  },
-];
+interface Story {
+  id: number;
+  title: string;
+  age: string;
+  rating: number;
+  pages: number;
+  description?: string;
+}
 
-const achievements = [
-  { id: 1, title: "Philosophy Master", icon: "🥇", earned: true },
-  { id: 2, title: "Practice Champion", icon: "🥈", earned: true },
-  { id: 3, title: "Quiz Expert", icon: "🥉", earned: false },
-];
+interface Achievement {
+  id: number;
+  title: string;
+  icon: string;
+  earned: boolean;
+  description?: string;
+}
 
 export default function LearnPage() {
+  const [learningPaths, setLearningPaths] = useState<LearningPath[]>([]);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [stories, setStories] = useState<Story[]>([]);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [punyaPoints, setPunyaPoints] = useState(250);
   const [selectedQuiz, setSelectedQuiz] = useState<number | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [quizResult, setQuizResult] = useState<boolean | null>(null);
-  const [punyaPoints, setPunyaPoints] = useState(250);
+  const [loading, setLoading] = useState(true);
 
-  const handleQuizAnswer = (quizId: number, answerIndex: number) => {
-    setSelectedQuiz(quizId);
-    setSelectedAnswer(answerIndex);
-    const quiz = quizzes.find((q) => q.id === quizId);
-    if (quiz && answerIndex === quiz.correct) {
-      setQuizResult(true);
-      setPunyaPoints((prev) => prev + 10);
-    } else {
-      setQuizResult(false);
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [pathsRes, quizzesRes, storiesRes, achievementsRes, progressRes] = await Promise.all([
+        fetch('/api/learn?type=paths'),
+        fetch('/api/learn?type=quizzes'),
+        fetch('/api/learn?type=stories'),
+        fetch('/api/learn?type=achievements'),
+        fetch('/api/learn?type=progress'),
+      ]);
+
+      const pathsData = await pathsRes.json();
+      const quizzesData = await quizzesRes.json();
+      const storiesData = await storiesRes.json();
+      const achievementsData = await achievementsRes.json();
+      const progressData = await progressRes.json();
+
+      setLearningPaths(pathsData.paths || []);
+      setQuizzes(quizzesData.quizzes || []);
+      setStories(storiesData.stories || []);
+      setAchievements(achievementsData.achievements || []);
+      setPunyaPoints(progressData.punyaPoints || 250);
+    } catch (error) {
+      console.error('Error fetching learn data:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleQuizAnswer = async (quizId: number, answerIndex: number) => {
+    setSelectedQuiz(quizId);
+    setSelectedAnswer(answerIndex);
+
+    try {
+      const response = await fetch('/api/learn', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'submit-quiz',
+          quizId,
+          answer: answerIndex,
+        }),
+      });
+
+      const result = await response.json();
+      setQuizResult(result.correct);
+      
+      if (result.correct) {
+        setPunyaPoints((prev) => prev + (result.points || 10));
+      }
+
+      const quiz = quizzes.find((q) => q.id === quizId);
+      if (quiz) {
+        quiz.explanation = result.explanation;
+        quiz.source = result.source;
+      }
+    } catch (error) {
+      console.error('Error submitting quiz:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-saffron-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your learning content...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-20 bg-gradient-to-b from-white via-ivory-50 to-white">
@@ -257,18 +294,24 @@ export default function LearnPage() {
                         </motion.button>
                       ))}
                     </div>
-                    {selectedQuiz === quiz.id && (
+                    {selectedQuiz === quiz.id && quizResult !== null && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className={cn(
-                          "p-4 rounded-xl",
+                          "p-4 rounded-xl space-y-2",
                           quizResult ? "bg-green-50 text-green-700 border-2 border-green-200" : "bg-red-50 text-red-700 border-2 border-red-200"
                         )}
                       >
                         <p className="font-semibold text-lg">
-                          {quizResult ? "🎉 Correct! Great job!" : "💡 That's not quite right. The correct answer is highlighted."}
+                          {quizResult ? "🎉 Correct! Great job! +10 Punya Points!" : "💡 That's not quite right. The correct answer is highlighted."}
                         </p>
+                        {quiz.explanation && (
+                          <p className="text-sm mt-2">{quiz.explanation}</p>
+                        )}
+                        {quiz.source && (
+                          <p className="text-xs mt-1 opacity-75">Source: {quiz.source}</p>
+                        )}
                       </motion.div>
                     )}
                   </motion.div>
