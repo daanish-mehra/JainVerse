@@ -214,29 +214,11 @@ export default function LearnPage() {
                             />
                           </div>
                         </div>
-                        <Button 
-                          onClick={async () => {
-                            try {
-                              const response = await fetch('/api/learn', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ action: 'update-path-progress', pathId: path.id }),
-                              });
-                              const result = await response.json();
-                              if (result.success) {
-                                const updatedPaths = learningPaths.map(p => 
-                                  p.id === path.id ? { ...p, progress: Math.min(p.progress + 10, 100) } : p
-                                );
-                                setLearningPaths(updatedPaths);
-                              }
-                            } catch (error) {
-                              console.error('Error updating path progress:', error);
-                            }
-                          }}
-                          className="w-full bg-gradient-to-r from-saffron-500 to-gold-500 hover:shadow-xl hover:scale-105 transition-all"
-                        >
-                          Continue Learning
-                        </Button>
+                        <Link href={`/learn/course/${path.id}`} className="block">
+                          <Button className="w-full bg-gradient-to-r from-saffron-500 to-gold-500 hover:shadow-xl hover:scale-105 transition-all">
+                            Continue Learning
+                          </Button>
+                        </Link>
                       </CardContent>
                     </Card>
                   </motion.div>
