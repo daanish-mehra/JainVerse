@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Trophy, BookOpen, Brain, Target, CheckCircle, XCircle, Sparkles } from "lucide-react";
+import { Trophy, BookOpen, Brain, Target, CheckCircle, XCircle, Sparkles, ChevronLeft, ChevronRight, Play, Pause } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -37,6 +37,7 @@ interface Story {
   rating: number;
   pages: number;
   description?: string;
+  content?: string;
 }
 
 interface Achievement {
@@ -57,6 +58,12 @@ export default function LearnPage() {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [quizResult, setQuizResult] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  const [narratingStoryId, setNarratingStoryId] = useState<number | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -131,6 +138,108 @@ export default function LearnPage() {
       }
     } catch (error) {
       console.error('Error submitting quiz:', error);
+    }
+  };
+
+  const handleNextQuiz = () => {
+    if (currentQuizIndex < quizzes.length - 1) {
+      setCurrentQuizIndex(prev => prev + 1);
+      setSelectedQuiz(null);
+      setSelectedAnswer(null);
+      setQuizResult(null);
+    }
+  };
+
+  const handlePrevQuiz = () => {
+    if (currentQuizIndex > 0) {
+      setCurrentQuizIndex(prev => prev - 1);
+      setSelectedQuiz(null);
+      setSelectedAnswer(null);
+      setQuizResult(null);
+    }
+  };
+
+  const handleSwipeStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleSwipeMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleSwipeEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    
+    if (isLeftSwipe && currentQuizIndex < quizzes.length - 1) {
+      handleNextQuiz();
+    }
+    if (isRightSwipe && currentQuizIndex > 0) {
+      handlePrevQuiz();
+    }
+    
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
+
+  const handleNarrateStory = async (story: Story) => {
+    if (narratingStoryId === story.id && audioUrl) {
+      // Toggle pause/play
+      if (audioRef.current) {
+        if (audioRef.current.paused) {
+          audioRef.current.play();
+        } else {
+          audioRef.current.pause();
+        }
+      }
+      return;
+    }
+
+    if (!story.content) {
+      alert('Story content not available for narration');
+      return;
+    }
+
+    setNarratingStoryId(story.id);
+    
+    try {
+      const response = await fetch('/api/stories/narrate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: story.content,
+          storyId: story.id,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success && data.audio) {
+        setAudioUrl(data.audio);
+        
+        // Play audio
+        const audio = new Audio(data.audio);
+        audioRef.current = audio;
+        audio.play();
+        
+        audio.onended = () => {
+          setNarratingStoryId(null);
+          setAudioUrl(null);
+        };
+        
+        audio.onerror = () => {
+          setNarratingStoryId(null);
+          setAudioUrl(null);
+          alert('Failed to play narration');
+        };
+      } else {
+        throw new Error(data.error || 'Failed to generate narration');
+      }
+    } catch (error) {
+      console.error('Error narrating story:', error);
+      setNarratingStoryId(null);
+      alert('Failed to generate narration. Please try again.');
     }
   };
 
@@ -247,47 +356,74 @@ export default function LearnPage() {
             <Card className="relative bg-gradient-to-br from-jainGreen-50 to-teal-50 border-2 border-jainGreen-200 shadow-xl overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-jainGreen-400 via-teal-400 to-jainGreen-500" />
               <CardHeader>
-                <CardTitle className="text-xl sm:text-2xl font-bold flex items-center text-gray-900">
-                  <Brain className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-jainGreen-600" />
-                  Daily Quiz
-                </CardTitle>
-                <CardDescription className="text-sm sm:text-base">
-                  Test your knowledge with today's quiz
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl sm:text-2xl font-bold flex items-center text-gray-900">
+                      <Brain className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-jainGreen-600" />
+                      Daily Quiz
+                    </CardTitle>
+                    <CardDescription className="text-sm sm:text-base mt-1">
+                      Question {currentQuizIndex + 1} of {quizzes.length}
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePrevQuiz}
+                      disabled={currentQuizIndex === 0}
+                      className="h-8 w-8 p-0"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNextQuiz}
+                      disabled={currentQuizIndex >= quizzes.length - 1}
+                      className="h-8 w-8 p-0"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-8">
-                {quizzes.slice(0, 5).map((quiz) => (
+              <CardContent>
+                {quizzes.length > 0 && quizzes[currentQuizIndex] ? (
                   <motion.div
-                    key={quiz.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6 }}
+                    key={currentQuizIndex}
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -50 }}
+                    transition={{ duration: 0.3 }}
+                    onTouchStart={handleSwipeStart}
+                    onTouchMove={handleSwipeMove}
+                    onTouchEnd={handleSwipeEnd}
                     className="space-y-4"
                   >
-                    <p className="font-bold text-lg sm:text-xl text-gray-900">❓ {quiz.question}</p>
+                    <p className="font-bold text-lg sm:text-xl text-gray-900">❓ {quizzes[currentQuizIndex].question}</p>
                     <div className="space-y-3">
-                      {quiz.options.map((option, index) => (
+                      {quizzes[currentQuizIndex].options.map((option, index) => (
                         <motion.button
                           key={index}
-                          onClick={() => handleQuizAnswer(quiz.id, index)}
-                          disabled={selectedQuiz === quiz.id}
-                          whileHover={{ scale: selectedQuiz !== quiz.id ? 1.02 : 1 }}
-                          whileTap={{ scale: selectedQuiz !== quiz.id ? 0.98 : 1 }}
+                          onClick={() => handleQuizAnswer(quizzes[currentQuizIndex].id, index)}
+                          disabled={selectedQuiz === quizzes[currentQuizIndex].id}
+                          whileHover={{ scale: selectedQuiz !== quizzes[currentQuizIndex].id ? 1.02 : 1 }}
+                          whileTap={{ scale: selectedQuiz !== quizzes[currentQuizIndex].id ? 0.98 : 1 }}
                           className={cn(
                             "w-full text-left p-4 rounded-xl border-2 transition-all duration-300 font-medium",
-                            selectedQuiz === quiz.id && selectedAnswer === index
+                            selectedQuiz === quizzes[currentQuizIndex].id && selectedAnswer === index
                               ? quizResult
                                 ? "bg-green-100 border-green-500 text-green-700 shadow-lg"
                                 : "bg-red-100 border-red-500 text-red-700 shadow-lg"
-                              : selectedQuiz === quiz.id && index === quiz.correct
+                              : selectedQuiz === quizzes[currentQuizIndex].id && index === quizzes[currentQuizIndex].correct
                               ? "bg-green-100 border-green-500 text-green-700 shadow-lg"
                               : "bg-white border-gray-200 hover:border-jainGreen-400 hover:bg-jainGreen-50 text-gray-800"
                           )}
                         >
                           <div className="flex items-center justify-between">
                             <span>{option}</span>
-                            {selectedQuiz === quiz.id && selectedAnswer === index && (
+                            {selectedQuiz === quizzes[currentQuizIndex].id && selectedAnswer === index && (
                               <motion.span
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
@@ -296,7 +432,7 @@ export default function LearnPage() {
                                 {quizResult ? "✅" : "❌"}
                               </motion.span>
                             )}
-                            {selectedQuiz === quiz.id && index === quiz.correct && selectedAnswer !== index && (
+                            {selectedQuiz === quizzes[currentQuizIndex].id && index === quizzes[currentQuizIndex].correct && selectedAnswer !== index && (
                               <motion.span
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
@@ -309,7 +445,7 @@ export default function LearnPage() {
                         </motion.button>
                       ))}
                     </div>
-                    {selectedQuiz === quiz.id && quizResult !== null && (
+                    {selectedQuiz === quizzes[currentQuizIndex].id && quizResult !== null && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -321,16 +457,29 @@ export default function LearnPage() {
                         <p className="font-semibold text-lg">
                           {quizResult ? "🎉 Correct! Great job! +10 Punya Points!" : "💡 That's not quite right. The correct answer is highlighted."}
                         </p>
-                        {quiz.explanation && (
-                          <p className="text-sm mt-2">{quiz.explanation}</p>
+                        {quizzes[currentQuizIndex].explanation && (
+                          <p className="text-sm mt-2">{quizzes[currentQuizIndex].explanation}</p>
                         )}
-                        {quiz.source && (
-                          <p className="text-xs mt-1 opacity-75">Source: {quiz.source}</p>
+                        {quizzes[currentQuizIndex].source && (
+                          <p className="text-xs mt-1 opacity-75">Source: {quizzes[currentQuizIndex].source}</p>
                         )}
                       </motion.div>
                     )}
+                    <div className="flex justify-center space-x-2 mt-4">
+                      {quizzes.map((_, idx) => (
+                        <div
+                          key={idx}
+                          className={cn(
+                            "h-2 rounded-full transition-all duration-300",
+                            idx === currentQuizIndex ? "w-8 bg-jainGreen-500" : "w-2 bg-gray-300"
+                          )}
+                        />
+                      ))}
+                    </div>
                   </motion.div>
-                ))}
+                ) : (
+                  <p className="text-center text-gray-600 py-8">No quizzes available</p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -367,8 +516,24 @@ export default function LearnPage() {
                           <Button variant="outline" size="sm" className="flex-1 hover:bg-purple-50 hover:border-purple-300">
                             Read
                           </Button>
-                          <Button variant="outline" size="sm" className="flex-1 hover:bg-purple-50 hover:border-purple-300">
-                            Listen
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1 hover:bg-purple-50 hover:border-purple-300"
+                            onClick={() => handleNarrateStory(story)}
+                            disabled={narratingStoryId === story.id && !audioUrl}
+                          >
+                            {narratingStoryId === story.id && audioUrl ? (
+                              <>
+                                <Pause className="w-4 h-4 mr-2" />
+                                Pause
+                              </>
+                            ) : (
+                              <>
+                                <Play className="w-4 h-4 mr-2" />
+                                Listen
+                              </>
+                            )}
                           </Button>
                         </div>
                       </CardContent>

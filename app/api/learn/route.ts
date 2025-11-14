@@ -372,32 +372,110 @@ function getDefaultQuizzes() {
   ];
 }
 
-const mockStories = [
-  {
-    id: 1,
-    title: "The Story of Mahavira",
-    age: "5-10 years",
-    rating: 4.8,
-    pages: 10,
-    description: "Learn about the life and teachings of the 24th Tirthankara",
-  },
-  {
-    id: 2,
-    title: "The Value of Ahimsa",
-    age: "2-5 years",
-    rating: 4.9,
-    pages: 8,
-    description: "A simple story teaching the importance of non-violence",
-  },
-  {
-    id: 3,
-    title: "The Elephant and the King",
-    age: "5-10 years",
-    rating: 4.7,
-    pages: 12,
-    description: "A moral story about compassion and forgiveness",
-  },
-];
+async function getStoriesFromArticles(): Promise<any[]> {
+          try {
+            const { getArticles } = await import("@/lib/cosmos");
+            const { generateStoryFromArticle } = await import("@/lib/gemini");
+            const articles = await getArticles(20);
+            
+            const container = await getContainer("stories");
+            let stories: any[] = [];
+            
+            if (container) {
+              try {
+                const { resources } = await container.items.query({
+                  query: "SELECT TOP 10 * FROM c ORDER BY c.createdAt DESC",
+                }).fetchAll();
+                
+                if (resources.length >= 5) {
+                  return resources.map((s, idx) => ({
+                    ...s,
+                    id: s.id || idx + 1,
+                    age: s.age || "8-12 years",
+                    rating: s.rating || 4.5,
+                    pages: s.pages || Math.ceil((s.content?.length || 0) / 500),
+                    content: s.content || s.description || "",
+                  }));
+                }
+              } catch (error) {
+                console.warn("Failed to query stories from Cosmos DB:", error);
+              }
+            }
+            
+            // Generate stories from articles if not enough in DB
+            const articlesForStories = articles
+              .filter(a => a.content && a.content.length > 500)
+              .slice(0, 10);
+            
+            for (const article of articlesForStories) {
+              try {
+                const story = await generateStoryFromArticle({
+                  title: article.title,
+                  content: article.content,
+                  age: "8-12 years",
+                });
+                
+                if (story) {
+                  const storyData = {
+                    id: stories.length + 1,
+                    title: story.title,
+                    content: story.content,
+                    moral: story.moral,
+                    age: story.age || "8-12 years",
+                    rating: 4.5 + Math.random() * 0.5,
+                    pages: Math.ceil(story.content.length / 500),
+                    description: story.moral,
+                    createdAt: new Date().toISOString(),
+                  };
+                  
+                  stories.push(storyData);
+                  
+                  if (container && stories.length <= 5) {
+                    await container.items.create(storyData).catch(() => {});
+                  }
+                  
+                  if (stories.length >= 5) break;
+                }
+              } catch (error) {
+                console.warn(`Failed to generate story from article ${article.title}:`, error);
+              }
+            }
+            
+            return stories.length > 0 ? stories : getDefaultStories();
+          } catch (error) {
+            console.error("Error generating stories from articles:", error);
+            return getDefaultStories();
+          }
+        }
+
+        function getDefaultStories() {
+          return [
+            {
+              id: 1,
+              title: "The Story of Mahavira",
+              age: "5-10 years",
+              rating: 4.8,
+              pages: 10,
+              description: "Learn about the life and teachings of the 24th Tirthankara",
+            },
+            {
+              id: 2,
+              title: "The Value of Ahimsa",
+              age: "2-5 years",
+              rating: 4.9,
+              pages: 8,
+              description: "A simple story teaching the importance of non-violence",
+            },
+            {
+              id: 3,
+              title: "The Elephant and the King",
+              age: "5-10 years",
+              rating: 4.7,
+              pages: 12,
+              description: "A moral story about compassion and forgiveness",
+            },
+          ];
+        }
 
 const mockAchievements = [
   { id: 1, title: "Philosophy Master", icon: "🥇", earned: false, description: "Completed all philosophy modules." },
@@ -444,11 +522,12 @@ export async function GET(request: NextRequest) {
   }
 
   if (type === "stories") {
+    const stories = await getStoriesFromArticles();
     return NextResponse.json({
-      stories: mockStories,
+      stories,
     }, {
       headers: {
-        'Cache-Control': 'public, s-maxage=3600',
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
       },
     });
   }
