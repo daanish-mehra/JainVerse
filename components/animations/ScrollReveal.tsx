@@ -18,7 +18,7 @@ export function ScrollReveal({
 }: ScrollRevealProps) {
   const ref = useRef(null);
   const [mounted, setMounted] = useState(false);
-  const isInView = useInView(ref, { once: false, amount: 0.1 });
+  const isInView = useInView(ref, { once: true, amount: 0.1, margin: "-100px" });
   const controls = useAnimation();
 
   useEffect(() => {
@@ -26,10 +26,16 @@ export function ScrollReveal({
   }, []);
 
   useEffect(() => {
-    if (mounted && isInView) {
-      controls.start("visible");
+    if (mounted) {
+      if (isInView) {
+        controls.start("visible");
+      } else {
+        setTimeout(() => {
+          controls.start("visible");
+        }, delay * 1000 + 200);
+      }
     }
-  }, [isInView, controls, mounted]);
+  }, [isInView, controls, mounted, delay]);
 
   const variants = {
     hidden: {
@@ -52,14 +58,14 @@ export function ScrollReveal({
   };
 
   if (!mounted) {
-    return <div ref={ref} className={className}>{children}</div>;
+    return <div ref={ref} className={className} style={{ opacity: 1 }}>{children}</div>;
   }
 
   return (
     <motion.div
       ref={ref}
       initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
+      animate={isInView ? "visible" : controls}
       variants={variants}
       className={className}
     >
