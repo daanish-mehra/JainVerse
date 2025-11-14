@@ -133,7 +133,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Detect if we should show an action button (before generating response)
-    const action = detectActionFromMessage(message);
+    let action;
+    try {
+      action = detectActionFromMessage(message);
+    } catch (error) {
+      console.warn('Failed to detect action:', error);
+      action = undefined;
+    }
     
     // Get API key from environment
     const apiKey = process.env.GEMINI_API_KEY;
@@ -172,8 +178,41 @@ Please provide a helpful, accurate response that matches the user's level of und
       const result = await model.generateContent(fullPrompt);
       const response = await result.response;
       responseText = response.text();
+      
+      // Validate response
+      if (!responseText || responseText.trim().length === 0) {
+        throw new Error('Empty response from Gemini API');
+      }
     } catch (error) {
       console.error('Gemini API error:', error);
+      
+      // Return a user-friendly error instead of throwing
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Full error details:', {
+        message: errorMessage,
+        error: error,
+      });
+      
+      // Check for specific Gemini errors
+      if (errorMessage.includes('API_KEY') || errorMessage.includes('API key') || errorMessage.includes('401') || errorMessage.includes('403')) {
+        return NextResponse.json({
+          text: "I apologize, but there's an authentication issue with the chatbot service. Please check your Gemini API key configuration.",
+          sources: ["Jainworld.com"],
+          confidence: 60,
+          action: action || undefined,
+        }, { status: 401 });
+      }
+      
+      if (errorMessage.includes('quota') || errorMessage.includes('rate limit') || errorMessage.includes('429')) {
+        return NextResponse.json({
+          text: "I'm currently experiencing high demand. Please try again in a moment.",
+          sources: ["Jainworld.com"],
+          confidence: 60,
+          action: action || undefined,
+        }, { status: 429 });
+      }
+      
+      // For other errors, throw to be caught by outer catch
       throw error;
     }
 
@@ -222,35 +261,46 @@ Please provide a helpful, accurate response that matches the user's level of und
       action = undefined;
     }
     
+    // Get error details safely
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorString = errorMessage.toLowerCase();
+    
+    console.error('Full error details:', {
+      errorMessage,
+      error,
+      message: message || 'undefined',
+      mode,
+      language,
+    });
+    
     // Handle specific Gemini API errors
-    if (error instanceof Error) {
-      if (error.message.includes('API_KEY') || error.message.includes('API key')) {
-        const fallbackResponse = mode === "beginner" 
-          ? "I'm here to help you learn about Jain philosophy! Try asking about:\n\n• What is Ahimsa?\n• Tell me about Mahavira\n• What is Jainism?\n• Explain Tirthankaras"
-          : "I apologize, but there's an authentication issue with the chatbot service. Please check your Gemini API key configuration.";
-        
-        return NextResponse.json({
-          text: fallbackResponse,
-          sources: ["Jainworld.com"],
-          confidence: 60,
-          action: action || undefined,
-        });
-      }
+    if (errorString.includes('api_key') || errorString.includes('api key') || errorString.includes('401') || errorString.includes('403') || errorString.includes('unauthorized') || errorString.includes('forbidden')) {
+      const fallbackResponse = mode === "beginner" 
+        ? "I'm here to help you learn about Jain philosophy! Try asking about:\n\n• What is Ahimsa?\n• Tell me about Mahavira\n• What is Jainism?\n• Explain Tirthankaras"
+        : "I apologize, but there's an authentication issue with the chatbot service. Please check your Gemini API key configuration.";
       
-      if (error.message.includes('quota') || error.message.includes('rate limit')) {
-        return NextResponse.json({
-          text: "I'm currently experiencing high demand. Please try again in a moment.",
-          sources: ["Jainworld.com"],
-          confidence: 60,
-          action: action || undefined,
-        }, { status: 429 });
-      }
+      return NextResponse.json({
+        text: fallbackResponse,
+        sources: ["Jainworld.com"],
+        confidence: 60,
+        action: action || undefined,
+      });
+    }
+    
+    if (errorString.includes('quota') || errorString.includes('rate limit') || errorString.includes('429') || errorString.includes('too many requests')) {
+      return NextResponse.json({
+        text: "I'm currently experiencing high demand. Please try again in a moment.",
+        sources: ["Jainworld.com"],
+        confidence: 60,
+        action: action || undefined,
+      }, { status: 429 });
     }
     
     // Always return 200 with fallback response - don't return 500
+    // This ensures the frontend doesn't break even if there's an error
     const fallbackResponse = mode === "beginner" 
       ? "I'm here to help you learn about Jain philosophy! Try asking about:\n\n• What is Ahimsa?\n• Tell me about Mahavira\n• What is Jainism?\n• Explain Tirthankaras\n• What is Karma in Jainism?\n• How to achieve Moksha?\n• What are Vratas?\n• Jain meditation practices"
-      : "I apologize, but I'm having trouble processing your request right now. Please try again later.";
+      : `I apologize, but I'm having trouble processing your request right now. ${errorMessage ? `Error: ${errorMessage.substring(0, 100)}` : 'Please try again later.'}`;
     
     return NextResponse.json({
       text: fallbackResponse,
