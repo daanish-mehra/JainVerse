@@ -169,7 +169,7 @@ export default function PracticePage() {
             <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
               Your spiritual routine for today
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
               {practices.map((practice, index) => (
                 <ScrollReveal key={practice.id} direction="up" delay={index * 0.1}>
                   <motion.div
@@ -248,7 +248,7 @@ export default function PracticePage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6 }}
-                    className="space-y-4"
+                    className="space-y-4 mb-6"
                   >
                     <div className="flex items-center justify-between">
                       <h3 className="font-bold text-xl text-gray-900">🔒 {vrata.name}</h3>
@@ -348,7 +348,7 @@ export default function PracticePage() {
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-gray-900">
               Progress
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-4">
               {[
                 { icon: Flame, label: "Streak", value: `${progress.streak} days`, color: "saffron", bg: "from-saffron-50 to-orange-50", border: "border-saffron-200" },
                 { icon: TrendingUp, label: "This Month", value: `${progress.thisMonth} practices`, color: "jainGreen", bg: "from-jainGreen-50 to-teal-50", border: "border-jainGreen-200" },
