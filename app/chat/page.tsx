@@ -169,16 +169,45 @@ export default function ChatPage() {
             >
               <motion.div
                 whileHover={{ scale: 1.02 }}
+                initial={{ y: 0 }}
+                animate={{ 
+                  y: [0, -5, 0],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
                 className={cn(
-                  "max-w-[85%] rounded-2xl px-4 py-3 shadow-md",
+                  "max-w-[85%] rounded-2xl px-4 py-3 shadow-md relative",
                   message.type === "user"
                     ? "bg-gradient-to-r from-saffron-500 to-gold-500 text-white rounded-br-sm"
                     : "bg-white border border-saffron-100 rounded-bl-sm"
                 )}
               >
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {message.text}
-                </p>
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="text-sm leading-relaxed whitespace-pre-wrap"
+                >
+                  {message.text.split('').map((char, idx) => (
+                    <motion.span
+                      key={idx}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        delay: idx * 0.01,
+                        duration: 0.3,
+                      }}
+                      style={{
+                        display: 'inline-block',
+                      }}
+                    >
+                      {char === ' ' ? '\u00A0' : char}
+                    </motion.span>
+                  ))}
+                </motion.p>
                 {message.sources && message.sources.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-white/20">
                     <p className="text-xs font-semibold mb-1 flex items-center">
