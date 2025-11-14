@@ -60,6 +60,18 @@ export default function LearnPage() {
 
   useEffect(() => {
     fetchData();
+    
+    // Handle scroll to specific section from URL params
+    const params = new URLSearchParams(window.location.search);
+    const scrollTo = params.get('scrollTo');
+    if (scrollTo) {
+      setTimeout(() => {
+        const element = document.getElementById(scrollTo);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 500);
+    }
   }, []);
 
   const fetchData = async () => {

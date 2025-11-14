@@ -53,6 +53,18 @@ export default function PracticePage() {
 
   useEffect(() => {
     fetchData();
+    
+    // Handle scroll to specific section from URL params
+    const params = new URLSearchParams(window.location.search);
+    const scrollTo = params.get('scrollTo');
+    if (scrollTo) {
+      setTimeout(() => {
+        const element = document.getElementById(scrollTo);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 500);
+    }
   }, []);
 
   const fetchData = async () => {
@@ -180,7 +192,7 @@ export default function PracticePage() {
 
       <div className="px-6 py-12 space-y-16 max-w-4xl mx-auto">
         <ScrollReveal direction="up" delay={0}>
-          <div>
+          <div id="practices" className="scroll-mt-20">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-gray-900">
               Today's Practices
             </h2>
@@ -249,7 +261,7 @@ export default function PracticePage() {
         </ScrollReveal>
 
         <ScrollReveal direction="up" delay={0.2}>
-          <div className="relative">
+          <div id="vrata" className="relative scroll-mt-20">
             <div className="absolute inset-0 bg-gradient-to-r from-saffron-100/50 via-transparent to-gold-100/50 rounded-3xl blur-3xl" />
             <Card className="relative border-2 border-saffron-200 bg-white/80 backdrop-blur-sm shadow-xl">
               <CardHeader>
@@ -304,7 +316,7 @@ export default function PracticePage() {
         </ScrollReveal>
 
         <ScrollReveal direction="up" delay={0.3}>
-          <div className="relative">
+          <div id="fasting" className="relative scroll-mt-20">
             <div className="absolute inset-0 bg-gradient-to-r from-jainGreen-100/50 via-transparent to-teal-100/50 rounded-3xl blur-3xl" />
             <Card className="relative bg-gradient-to-br from-jainGreen-50 to-teal-50 border-2 border-jainGreen-200 shadow-xl overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-jainGreen-400 via-teal-400 to-jainGreen-500" />
