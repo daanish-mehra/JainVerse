@@ -2,21 +2,15 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Mic, BookOpen, Sparkles, ArrowRight, Calendar, Target, CheckCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { Send, Mic, BookOpen, Sparkles, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { FadeIn } from "@/components/animations/FadeIn";
-
-interface ActionButton {
-  label: string;
-  href: string;
-  type: 'learn' | 'practice' | 'vrata' | 'fasting' | 'quiz' | 'story';
-}
+import Link from "next/link";
+import type { ActionButton } from "@/lib/action-detector";
 
 interface Message {
   id: number;
@@ -29,7 +23,6 @@ interface Message {
 }
 
 export default function ChatPage() {
-  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -91,8 +84,8 @@ export default function ChatPage() {
           type: "bot",
           text: data.text || data.message || "I apologize, but I couldn't generate a response.",
           timestamp: new Date(),
-          sources: data.sources || [],
-          confidence: data.confidence || 80,
+          sources: data.sources,
+          confidence: data.confidence,
           action: data.action,
         };
         setMessages((prev) => [...prev, botMessage]);
@@ -180,48 +173,16 @@ export default function ChatPage() {
             >
               <motion.div
                 whileHover={{ scale: 1.02 }}
-                initial={{ y: 0 }}
-                animate={{ 
-                  y: [0, -5, 0],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
                 className={cn(
-                  "max-w-[85%] rounded-2xl px-4 py-3 shadow-md relative",
+                  "max-w-[85%] rounded-2xl px-4 py-3 shadow-md",
                   message.type === "user"
                     ? "bg-gradient-to-r from-saffron-500 to-gold-500 text-white rounded-br-sm"
                     : "bg-white border border-saffron-100 rounded-bl-sm"
                 )}
               >
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="text-sm leading-relaxed whitespace-pre-wrap"
-                >
-                  {message.text.length < 200 
-                    ? message.text.split('').map((char, idx) => (
-                        <motion.span
-                          key={idx}
-                          initial={{ opacity: 0, y: 5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{
-                            delay: idx * 0.005,
-                            duration: 0.2,
-                          }}
-                          style={{
-                            display: 'inline-block',
-                          }}
-                        >
-                          {char === ' ' ? '\u00A0' : char}
-                        </motion.span>
-                      ))
-                    : message.text
-                  }
-                </motion.p>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {message.text}
+                </p>
                 {message.sources && message.sources.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-white/20">
                     <p className="text-xs font-semibold mb-1 flex items-center">
@@ -249,28 +210,31 @@ export default function ChatPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="mt-4 pt-4 border-t border-white/20"
+                    className="mt-4 pt-4 border-t border-saffron-100"
                   >
                     <Link href={message.action.href}>
                       <motion.button
-                        whileHover={{ scale: 1.05, x: 5 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: 1.02, x: 5 }}
+                        whileTap={{ scale: 0.98 }}
                         className={cn(
-                          "w-full flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-xl",
-                          message.type === "user"
-                            ? "bg-white/20 text-white hover:bg-white/30 border border-white/30"
-                            : "bg-gradient-to-r from-saffron-500 to-gold-500 text-white hover:from-saffron-600 hover:to-gold-600"
+                          "w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 shadow-sm",
+                          message.action.type === 'learn' && "bg-gradient-to-r from-jainGreen-500 to-jainGreen-600 text-white hover:shadow-lg",
+                          message.action.type === 'practice' && "bg-gradient-to-r from-gold-500 to-gold-600 text-white hover:shadow-lg",
+                          message.action.type === 'fasting' && "bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:shadow-lg",
+                          message.action.type === 'vrata' && "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:shadow-lg",
+                          message.action.type === 'quiz' && "bg-gradient-to-r from-teal-500 to-teal-600 text-white hover:shadow-lg",
+                          message.action.type === 'story' && "bg-gradient-to-r from-pink-500 to-pink-600 text-white hover:shadow-lg"
                         )}
                       >
-                        <div className="flex items-center space-x-2">
-                          {message.action.type === 'learn' && <BookOpen className="w-4 h-4" />}
-                          {message.action.type === 'practice' && <Target className="w-4 h-4" />}
-                          {message.action.type === 'fasting' && <Calendar className="w-4 h-4" />}
-                          {message.action.type === 'vrata' && <CheckCircle className="w-4 h-4" />}
-                          {message.action.type === 'quiz' && <Sparkles className="w-4 h-4" />}
-                          {message.action.type === 'story' && <BookOpen className="w-4 h-4" />}
-                          <span>{message.action.label}</span>
-                        </div>
+                        <span className="flex items-center">
+                          {message.action.type === 'learn' && '📚'}
+                          {message.action.type === 'practice' && '🧘'}
+                          {message.action.type === 'fasting' && '🍽️'}
+                          {message.action.type === 'vrata' && '🙏'}
+                          {message.action.type === 'quiz' && '❓'}
+                          {message.action.type === 'story' && '📖'}
+                          <span className="ml-2">{message.action.label}</span>
+                        </span>
                         <ArrowRight className="w-4 h-4" />
                       </motion.button>
                     </Link>

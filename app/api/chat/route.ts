@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { getArticles } from '@/lib/cosmos';
-import { detectActionFromMessage } from '@/lib/action-detector';
 
+// Language mapping for better Gemini understanding
 const languageMap: Record<string, string> = {
   EN: 'English',
   HI: 'Hindi',
@@ -11,7 +10,8 @@ const languageMap: Record<string, string> = {
   PA: 'Punjabi',
 };
 
-function getSystemPrompt(level: string, language: string, context?: string): string {
+// Get system prompt based on level and language
+function getSystemPrompt(level: string, language: string): string {
   const langName = languageMap[language] || 'English';
   const langInstruction = language === 'EN' 
     ? '' 
@@ -24,7 +24,7 @@ function getSystemPrompt(level: string, language: string, context?: string): str
 - Break down concepts into easy-to-understand parts
 - Use analogies and relatable examples
 - Be encouraging and supportive
-- Keep responses concise (1-2 sentences when action button is available, 2-3 paragraphs otherwise)
+- Keep responses concise (2-3 paragraphs maximum)
 - Focus on practical applications and basic concepts`,
     
     intermediate: `You are a knowledgeable Jain philosophy guide speaking to someone with some understanding of Jainism.
@@ -60,11 +60,9 @@ ${langInstruction}
 LEVEL OF RESPONSE: ${level.toUpperCase()}
 ${levelInstructions[level as keyof typeof levelInstructions]}
 
-${context ? `\nRelevant context from Jain scriptures and teachings:\n${context}\n` : ""}
-
 RESPONSE GUIDELINES:
 - Be warm, respectful, and encouraging
-- Be very concise and to the point - especially when an action button will guide users to more details
+- Be very concise and to the point - don't beat around the bush or be too verbose
 - When discussing practices (vrata, meditation, etc.), provide practical guidance
 - If asked about controversial topics, present balanced perspectives
 - Always maintain reverence for Jain traditions and teachings
@@ -88,15 +86,8 @@ Remember to respond in a way that matches the user's level of understanding (${l
 }
 
 export async function POST(req: NextRequest) {
-  let message: string | undefined;
-  let language = "EN";
-  let mode = "beginner";
-  
   try {
-    const body = await req.json();
-    message = body.message;
-    language = body.language || "EN";
-    mode = body.mode || "beginner";
+    const { message, language = "EN", mode = "beginner" } = await req.json();
     
     if (!message || typeof message !== 'string') {
       return NextResponse.json(
@@ -105,209 +96,78 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let context = "";
-    
-    // Simple RAG: Search for relevant articles based on keywords
-    try {
-      const articles = await getArticles(20);
-      const lowerMessage = message.toLowerCase();
-      
-      const relevantArticles = articles.filter(article => {
-        const title = article.title?.toLowerCase() || "";
-        const content = article.content?.toLowerCase() || "";
-        const keywords = lowerMessage.split(/\s+/);
-        
-        return keywords.some(keyword => 
-          keyword.length > 3 && (title.includes(keyword) || content.includes(keyword))
-        );
-      });
-
-      if (relevantArticles.length > 0) {
-        context = relevantArticles
-          .slice(0, 3)
-          .map(article => `Title: ${article.title}\nContent: ${article.content.substring(0, 500)}...`)
-          .join("\n\n---\n\n");
-      }
-    } catch (error) {
-      console.warn("Failed to fetch context from articles:", error);
-    }
-
-    // Detect if we should show an action button (before generating response)
-    let action;
-    try {
-      action = detectActionFromMessage(message);
-    } catch (error) {
-      console.warn('Failed to detect action:', error);
-      action = undefined;
-    }
-    
     // Get API key from environment
     const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) {
       console.error('GEMINI_API_KEY is not set in environment variables');
-      const fallbackResponse = mode === "beginner" 
-        ? "I'm here to help you learn about Jain philosophy! Try asking about:\n\n• What is Ahimsa?\n• Tell me about Mahavira\n• What is Jainism?\n• Explain Tirthankaras"
-        : "I apologize, but the chatbot service is not properly configured. Please check your Gemini API key configuration.";
-      
-      return NextResponse.json({
-        text: fallbackResponse,
-        sources: ["Jainworld.com"],
-        confidence: 60,
-        action: action || undefined,
-      });
+      return NextResponse.json(
+        { 
+          error: 'API configuration error', 
+          text: "I apologize, but the chatbot service is not properly configured. Please contact support." 
+        },
+        { status: 500 }
+      );
     }
 
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    // Using gemini-2ç.5-flash for better performance and lower latency
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     // Get system prompt based on level and language
-    const systemPrompt = getSystemPrompt(mode, language, context);
+    const systemPrompt = getSystemPrompt(mode, language);
 
     // Create the full prompt
     const fullPrompt = `${systemPrompt}
 
 User's question: ${message}
 
-Please provide a helpful, accurate response that matches the user's level of understanding and is entirely in ${languageMap[language] || 'English'} language.${action ? ' Keep your response concise (1-2 sentences) as the user will be directed to more detailed content via an action button.' : ''}`;
+Please provide a helpful, accurate response that matches the user's level of understanding and is entirely in ${languageMap[language] || 'English'} language.`;
 
     // Generate response
-    let responseText: string;
-    try {
-      const result = await model.generateContent(fullPrompt);
-      const response = await result.response;
-      responseText = response.text();
-      
-      // Validate response
-      if (!responseText || responseText.trim().length === 0) {
-        throw new Error('Empty response from Gemini API');
-      }
-    } catch (error) {
-      console.error('Gemini API error:', error);
-      
-      // Return a user-friendly error instead of throwing
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Full error details:', {
-        message: errorMessage,
-        error: error,
-      });
-      
-      // Check for specific Gemini errors
-      if (errorMessage.includes('API_KEY') || errorMessage.includes('API key') || errorMessage.includes('401') || errorMessage.includes('403')) {
-        return NextResponse.json({
-          text: "I apologize, but there's an authentication issue with the chatbot service. Please check your Gemini API key configuration.",
-          sources: ["Jainworld.com"],
-          confidence: 60,
-          action: action || undefined,
-        }, { status: 401 });
-      }
-      
-      if (errorMessage.includes('quota') || errorMessage.includes('rate limit') || errorMessage.includes('429')) {
-        return NextResponse.json({
-          text: "I'm currently experiencing high demand. Please try again in a moment.",
-          sources: ["Jainworld.com"],
-          confidence: 60,
-          action: action || undefined,
-        }, { status: 429 });
-      }
-      
-      // For other errors, throw to be caught by outer catch
-      throw error;
-    }
+    const result = await model.generateContent(fullPrompt);
+    const response = await result.response;
+    const text = response.text();
 
-    // Make response more concise if action button is available
-    if (action && responseText.length > 150) {
-      const firstSentence = responseText.split(/[.!?]/)[0];
-      if (firstSentence.length > 50 && firstSentence.length < 200) {
-        responseText = firstSentence.trim() + '.';
-      } else {
-        responseText = responseText.substring(0, 150).trim() + '...';
-      }
-    }
-
-    // Extract sources from response text
-    const sources: string[] = [];
-    const sourcePatterns = [
-      /Tattvarth\s+Sutra/gi,
-      /Jainworld\.com/gi,
-      /Acharanga\s+Sutra/gi,
-      /Acharya\s+Kundkund/gi,
-      /Samayasar/gi,
-    ];
-    sourcePatterns.forEach((pattern) => {
-      const matches = responseText.match(pattern);
-      if (matches) {
-        sources.push(...matches);
-      }
-    });
-
-    const confidence = sources.length > 0 || context ? 95 : 80;
-    
+    // Return response
+    // Note: Gemini API doesn't provide sources or confidence scores
+    // These fields are excluded to avoid misleading users
     return NextResponse.json({
-      text: responseText,
-      sources: sources.length > 0 ? Array.from(new Set(sources)) : (context ? ["Jainworld.com"] : []),
-      confidence,
-      action: action || undefined,
+      text: text,
     });
   } catch (error) {
     console.error('Chat API error:', error);
     
-    // Detect action even on error (message might not be defined if error happened early)
-    let action;
-    try {
-      action = message ? detectActionFromMessage(message) : undefined;
-    } catch {
-      action = undefined;
-    }
-    
-    // Get error details safely
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorString = errorMessage.toLowerCase();
-    
-    console.error('Full error details:', {
-      errorMessage,
-      error,
-      message: message || 'undefined',
-      mode,
-      language,
-    });
-    
     // Handle specific Gemini API errors
-    if (errorString.includes('api_key') || errorString.includes('api key') || errorString.includes('401') || errorString.includes('403') || errorString.includes('unauthorized') || errorString.includes('forbidden')) {
-      const fallbackResponse = mode === "beginner" 
-        ? "I'm here to help you learn about Jain philosophy! Try asking about:\n\n• What is Ahimsa?\n• Tell me about Mahavira\n• What is Jainism?\n• Explain Tirthankaras"
-        : "I apologize, but there's an authentication issue with the chatbot service. Please check your Gemini API key configuration.";
+    if (error instanceof Error) {
+      if (error.message.includes('API_KEY')) {
+        return NextResponse.json(
+          { 
+            error: 'Invalid API key', 
+            text: "I apologize, but there's an authentication issue. Please check the API configuration." 
+          },
+          { status: 500 }
+        );
+      }
       
-      return NextResponse.json({
-        text: fallbackResponse,
-        sources: ["Jainworld.com"],
-        confidence: 60,
-        action: action || undefined,
-      });
+      if (error.message.includes('quota') || error.message.includes('rate limit')) {
+        return NextResponse.json(
+          { 
+            error: 'Rate limit exceeded', 
+            text: "I'm currently experiencing high demand. Please try again in a moment." 
+          },
+          { status: 429 }
+        );
+      }
     }
     
-    if (errorString.includes('quota') || errorString.includes('rate limit') || errorString.includes('429') || errorString.includes('too many requests')) {
-      return NextResponse.json({
-        text: "I'm currently experiencing high demand. Please try again in a moment.",
-        sources: ["Jainworld.com"],
-        confidence: 60,
-        action: action || undefined,
-      }, { status: 429 });
-    }
-    
-    // Always return 200 with fallback response - don't return 500
-    // This ensures the frontend doesn't break even if there's an error
-    const fallbackResponse = mode === "beginner" 
-      ? "I'm here to help you learn about Jain philosophy! Try asking about:\n\n• What is Ahimsa?\n• Tell me about Mahavira\n• What is Jainism?\n• Explain Tirthankaras\n• What is Karma in Jainism?\n• How to achieve Moksha?\n• What are Vratas?\n• Jain meditation practices"
-      : `I apologize, but I'm having trouble processing your request right now. ${errorMessage ? `Error: ${errorMessage.substring(0, 100)}` : 'Please try again later.'}`;
-    
-    return NextResponse.json({
-      text: fallbackResponse,
-      sources: ["Jainworld.com"],
-      confidence: 60,
-      action: action || undefined,
-    });
+    return NextResponse.json(
+      { 
+        error: 'Failed to generate response', 
+        text: "I apologize, but I'm having trouble processing your request right now. Please try again later." 
+      },
+      { status: 500 }
+    );
   }
 }
-
