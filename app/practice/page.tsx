@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calendar, CheckCircle, Clock, Flame, TrendingUp, Target, Award } from "lucide-react";
+import { Calendar, CheckCircle, Clock, Flame, TrendingUp, Target, Award, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { FadeIn } from "@/components/animations/FadeIn";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CalendarView } from "@/components/CalendarView";
 
 interface Practice {
   id: number;
@@ -50,6 +52,10 @@ export default function PracticePage() {
   const [progress, setProgress] = useState<Progress>({ streak: 0, totalPractices: 0, vratasCompleted: 0, thisMonth: 0 });
   const [reflection, setReflection] = useState("");
   const [loading, setLoading] = useState(true);
+  const [currentWeek, setCurrentWeek] = useState(0);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
 
   useEffect(() => {
     fetchData();
@@ -83,15 +89,29 @@ export default function PracticePage() {
 
       const today = new Date();
       const todayDayName = today.toLocaleDateString('en-US', { weekday: 'short' });
-      const scheduleWithDates = (fastingData.schedule || []).map((day: FastingDay, index: number) => {
-        const date = new Date();
-        date.setDate(date.getDate() - today.getDay() + index + 1);
-        return {
-          ...day,
-          date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          isToday: day.day === todayDayName,
-        };
-      });
+      
+      const getWeekDates = (weekOffset: number) => {
+        const startDate = new Date(today);
+        startDate.setDate(today.getDate() - today.getDay() + (weekOffset * 7));
+        
+        return (fastingData.schedule || []).map((day: FastingDay, index: number) => {
+          const date = new Date(startDate);
+          date.setDate(startDate.getDate() + index);
+          const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const fullDate = date.toISOString().split('T')[0];
+          const isToday = fullDate === today.toISOString().split('T')[0];
+          
+          return {
+            ...day,
+            date: dateStr,
+            fullDate: fullDate,
+            isToday,
+            dateObj: date,
+          };
+        });
+      };
+      
+      const scheduleWithDates = getWeekDates(currentWeek);
 
       setPractices(practicesData.practices || []);
       setVratas(vratasData.vratas || []);
@@ -102,6 +122,49 @@ export default function PracticePage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNextWeek = () => {
+    setCurrentWeek(prev => prev + 1);
+  };
+
+  const handlePrevWeek = () => {
+    setCurrentWeek(prev => prev - 1);
+  };
+
+  const handleSwipeStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleSwipeMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleSwipeEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    
+    if (isLeftSwipe) {
+      handleNextWeek();
+    }
+    if (isRightSwipe) {
+      handlePrevWeek();
+    }
+  };
+
+  const getWeekRange = () => {
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - today.getDay() + (currentWeek * 7));
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6);
+    
+    return {
+      start: startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      end: endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    };
   };
 
   const handleCompletePractice = async (practiceId: number) => {
@@ -327,19 +390,49 @@ export default function PracticePage() {
                       <Calendar className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-jainGreen-600" />
                       Fasting Schedule
                     </CardTitle>
-                    <CardDescription className="text-base mt-1">This Week's Observance</CardDescription>
+                    <CardDescription className="text-base mt-1">
+                      {getWeekRange().start} - {getWeekRange().end}
+                    </CardDescription>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowCalendar(true)}
+                    className="hover:bg-jainGreen-50 rounded-full"
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Calendar
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-7 gap-2 mb-4">
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((dayName) => (
-                    <p key={dayName} className="text-center text-xs font-semibold text-gray-500 py-2">
-                      {dayName}
-                    </p>
-                  ))}
+                <div className="flex items-center justify-between mb-4">
+                  <motion.button
+                    onClick={handlePrevWeek}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="p-2 rounded-full hover:bg-jainGreen-100 transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5 text-jainGreen-600" />
+                  </motion.button>
+                  <span className="text-sm font-medium text-gray-600">
+                    Week {currentWeek === 0 ? '(Current)' : currentWeek > 0 ? `+${currentWeek}` : currentWeek}
+                  </span>
+                  <motion.button
+                    onClick={handleNextWeek}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="p-2 rounded-full hover:bg-jainGreen-100 transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5 text-jainGreen-600" />
+                  </motion.button>
                 </div>
-                <div className="grid grid-cols-7 gap-2 mb-6">
+                <div
+                  onTouchStart={handleSwipeStart}
+                  onTouchMove={handleSwipeMove}
+                  onTouchEnd={handleSwipeEnd}
+                  className="space-y-3 mb-6"
+                >
                   {fastingSchedule.map((day, index) => {
                     const getFastingTypeInfo = (type: string) => {
                       switch (type) {
@@ -359,48 +452,62 @@ export default function PracticePage() {
                     return (
                       <FadeIn key={index} delay={index * 0.05}>
                         <motion.div
-                          whileHover={{ scale: 1.08, y: -6 }}
-                          whileTap={{ scale: 0.95 }}
+                          whileHover={{ scale: 1.02, x: 5 }}
+                          whileTap={{ scale: 0.98 }}
                           className={cn(
-                            "relative p-3 rounded-xl text-center shadow-md hover:shadow-xl transition-all duration-300 border-2 cursor-pointer group",
+                            "relative p-4 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border-2 group",
                             day.isToday 
                               ? `bg-gradient-to-br ${typeInfo.bg} ${typeInfo.border} ring-2 ring-jainGreen-400 ring-offset-2` 
                               : `bg-white ${typeInfo.border}`
                           )}
                         >
-                          {day.isToday && (
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              className="absolute -top-2 -right-2 w-3 h-3 bg-jainGreen-500 rounded-full ring-2 ring-white"
-                            />
-                          )}
-                          <p className={cn(
-                            "text-xs font-bold mb-1",
-                            day.isToday ? "text-jainGreen-700" : "text-gray-600"
-                          )}>
-                            {day.day}
-                          </p>
-                          <p className={cn(
-                            "text-[10px] text-gray-500 mb-2",
-                            day.isToday && "font-semibold"
-                          )}>
-                            {day.date}
-                          </p>
-                          <div className={cn(
-                            "text-2xl mb-2 transform transition-transform group-hover:scale-110",
-                            day.isToday && "scale-110"
-                          )}>
-                            {typeInfo.icon}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4 flex-1">
+                              {day.isToday && (
+                                <motion.div
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  className="w-2 h-2 bg-jainGreen-500 rounded-full ring-2 ring-white"
+                                />
+                              )}
+                              <div className={cn(
+                                "text-3xl transform transition-transform group-hover:scale-110",
+                                day.isToday && "scale-110"
+                              )}>
+                                {typeInfo.icon}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2 mb-1">
+                                  <p className={cn(
+                                    "text-base font-bold",
+                                    day.isToday ? "text-jainGreen-700" : "text-gray-700"
+                                  )}>
+                                    {day.day}
+                                  </p>
+                                  {day.isToday && (
+                                    <span className="text-xs bg-jainGreen-100 text-jainGreen-700 px-2 py-0.5 rounded-full font-medium">
+                                      Today
+                                    </span>
+                                  )}
+                                </div>
+                                <p className={cn(
+                                  "text-sm text-gray-600 mb-1",
+                                  day.isToday && "font-semibold"
+                                )}>
+                                  {day.date}
+                                </p>
+                                <p className={cn(
+                                  "text-sm font-bold",
+                                  day.type === 'Ekasan' && "text-saffron-700",
+                                  day.type === 'Biasan' && "text-green-700",
+                                  day.type === 'Chauvihar' && "text-purple-700"
+                                )}>
+                                  {day.type}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">{typeInfo.description}</p>
+                              </div>
+                            </div>
                           </div>
-                          <p className={cn(
-                            "text-xs font-bold leading-tight",
-                            day.type === 'Ekasan' && "text-saffron-700",
-                            day.type === 'Biasan' && "text-green-700",
-                            day.type === 'Chauvihar' && "text-purple-700"
-                          )}>
-                            {day.type}
-                          </p>
                           <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-5 transition-opacity rounded-xl" 
                             style={{ background: `linear-gradient(135deg, ${typeInfo.color.replace('from-', '').replace(' to-', ',')})` }}
                           />
@@ -424,15 +531,42 @@ export default function PracticePage() {
                       <span className="text-gray-600">Chauvihar</span>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" className="hover:bg-jainGreen-50 hover:border-jainGreen-300 rounded-xl">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowCalendar(true)}
+                    className="hover:bg-jainGreen-50 hover:border-jainGreen-300 rounded-xl"
+                  >
                     <Calendar className="w-4 h-4 mr-2" />
-                    Edit
+                    Calendar
                   </Button>
                 </div>
               </CardContent>
             </Card>
           </div>
         </ScrollReveal>
+
+        <Dialog open={showCalendar} onOpenChange={setShowCalendar}>
+          <DialogContent onClose={() => setShowCalendar(false)}>
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center">
+                <Calendar className="w-6 h-6 mr-2 text-jainGreen-600" />
+                Select Date
+              </DialogTitle>
+            </DialogHeader>
+            <CalendarView 
+              onSelectDate={(date: Date) => {
+                const today = new Date();
+                const selectedDate = new Date(date);
+                const diffTime = selectedDate.getTime() - today.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const weekOffset = Math.floor(diffDays / 7);
+                setCurrentWeek(weekOffset);
+                setShowCalendar(false);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
 
         <ScrollReveal direction="up" delay={0.4}>
           <div className="relative">
