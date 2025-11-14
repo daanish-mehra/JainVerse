@@ -197,8 +197,8 @@ function getDefaultLearningPaths() {
     {
       id: 1,
       title: "Jain Philosophy Basics",
-      progress: 80,
-      badges: 3,
+      progress: 0,
+      badges: 0,
       totalBadges: 5,
       level: "Beginner",
       description: "Learn the fundamental principles of Jainism",
@@ -206,8 +206,8 @@ function getDefaultLearningPaths() {
     {
       id: 2,
       title: "Meditation & Practices",
-      progress: 60,
-      badges: 2,
+      progress: 0,
+      badges: 0,
       totalBadges: 5,
       level: "Intermediate",
       description: "Discover meditation techniques and daily practices",
@@ -215,8 +215,8 @@ function getDefaultLearningPaths() {
     {
       id: 3,
       title: "Mantras & Prayers",
-      progress: 40,
-      badges: 1,
+      progress: 0,
+      badges: 0,
       totalBadges: 5,
       level: "Beginner",
       description: "Master Jain mantras and prayers",
@@ -224,7 +224,7 @@ function getDefaultLearningPaths() {
     {
       id: 4,
       title: "Jain Ethics in Daily Life",
-      progress: 20,
+      progress: 0,
       badges: 0,
       totalBadges: 5,
       level: "Beginner",

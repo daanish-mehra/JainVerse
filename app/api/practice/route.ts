@@ -51,7 +51,7 @@ const mockVratas = [
   {
     id: 2,
     name: "Chauvihar Vrata",
-    day: 15,
+    day: 0,
     totalDays: 30,
     progress: 0,
     description: "A vow to abstain from food and water after sunset.",
