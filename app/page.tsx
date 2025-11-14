@@ -133,13 +133,9 @@ export default function HomePage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
-                className="text-5xl sm:text-6xl md:text-7xl font-bold font-display mb-4 bg-gradient-to-r from-saffron-600 via-gold-500 to-saffron-600 bg-clip-text text-transparent bg-[length:200%_auto] animate-[shimmer_3s_infinite] leading-tight"
+                className="text-5xl sm:text-6xl md:text-7xl font-bold font-display mb-4 bg-gradient-to-r from-saffron-600 via-gold-500 to-saffron-600 bg-clip-text text-transparent leading-tight"
               >
-                <Typewriter
-                  text="JainAI"
-                  speed={100}
-                  delay={0.6}
-                />
+                JainAI
               </motion.h1>
               
               <motion.p
