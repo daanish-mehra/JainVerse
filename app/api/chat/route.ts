@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateChatResponse } from '@/lib/azure-openai';
 import { getArticles } from '@/lib/cosmos';
+import { detectActionFromMessage } from '@/lib/action-detector';
 
 export async function POST(req: NextRequest) {
   try {
@@ -46,12 +47,28 @@ export async function POST(req: NextRequest) {
       context
     );
 
+    // Detect if we should show an action button
+    const action = detectActionFromMessage(message);
+    
+    // Make response more concise if action button is available
+    let responseText = text;
+    if (action && text.length > 150) {
+      // Extract first sentence or first 150 chars
+      const firstSentence = text.split(/[.!?]/)[0];
+      if (firstSentence.length > 50 && firstSentence.length < 200) {
+        responseText = firstSentence.trim() + '.';
+      } else {
+        responseText = text.substring(0, 150).trim() + '...';
+      }
+    }
+
     const confidence = sources && sources.length > 0 ? 95 : 80;
     
     return NextResponse.json({
-      text,
+      text: responseText,
       sources: sources.length > 0 ? sources : ["Jainworld.com"],
       confidence,
+      action: action || undefined,
     });
   } catch (error) {
     console.error('Chat API error:', error);

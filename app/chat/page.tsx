@@ -2,13 +2,21 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Mic, BookOpen, Sparkles } from "lucide-react";
+import { Send, Mic, BookOpen, Sparkles, ArrowRight, Calendar, Target, CheckCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { FadeIn } from "@/components/animations/FadeIn";
+
+interface ActionButton {
+  label: string;
+  href: string;
+  type: 'learn' | 'practice' | 'vrata' | 'fasting' | 'quiz' | 'story';
+}
 
 interface Message {
   id: number;
@@ -17,9 +25,11 @@ interface Message {
   timestamp: Date;
   sources?: string[];
   confidence?: number;
+  action?: ActionButton;
 }
 
 export default function ChatPage() {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -233,6 +243,38 @@ export default function ChatPage() {
                     <Sparkles className="w-3 h-3 mr-1" />
                     Confidence: {message.confidence}%
                   </div>
+                )}
+                {message.action && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="mt-4 pt-4 border-t border-white/20"
+                  >
+                    <Link href={message.action.href}>
+                      <motion.button
+                        whileHover={{ scale: 1.05, x: 5 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={cn(
+                          "w-full flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-xl",
+                          message.type === "user"
+                            ? "bg-white/20 text-white hover:bg-white/30 border border-white/30"
+                            : "bg-gradient-to-r from-saffron-500 to-gold-500 text-white hover:from-saffron-600 hover:to-gold-600"
+                        )}
+                      >
+                        <div className="flex items-center space-x-2">
+                          {message.action.type === 'learn' && <BookOpen className="w-4 h-4" />}
+                          {message.action.type === 'practice' && <Target className="w-4 h-4" />}
+                          {message.action.type === 'fasting' && <Calendar className="w-4 h-4" />}
+                          {message.action.type === 'vrata' && <CheckCircle className="w-4 h-4" />}
+                          {message.action.type === 'quiz' && <Sparkles className="w-4 h-4" />}
+                          {message.action.type === 'story' && <BookOpen className="w-4 h-4" />}
+                          <span>{message.action.label}</span>
+                        </div>
+                        <ArrowRight className="w-4 h-4" />
+                      </motion.button>
+                    </Link>
+                  </motion.div>
                 )}
                 <p className="text-xs opacity-70 mt-2">
                   {message.timestamp.toLocaleTimeString("en-US", {
