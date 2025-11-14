@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { BookOpen, CheckCircle, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { BookOpen, CheckCircle, ChevronLeft, ChevronRight, Check, Trophy } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
@@ -227,13 +227,18 @@ export default function ModulePage() {
         </ScrollReveal>
       </div>
 
-      {selectedArticle && (
-        <ArticleModal
-          article={selectedArticle}
-          onClose={() => setSelectedArticle(null)}
-          onComplete={() => handleArticleComplete(selectedArticle.id)}
-        />
-      )}
+      <AnimatePresence>
+        {selectedArticle && (
+          <ArticleModal
+            key={selectedArticle.id}
+            article={selectedArticle}
+            onClose={() => setSelectedArticle(null)}
+            onComplete={() => {
+              handleArticleComplete(selectedArticle.id);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
