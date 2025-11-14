@@ -18,9 +18,21 @@ export function getAzureOpenAIClient(): OpenAI | null {
 
   try {
     const deploymentName = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "jainai-gpt4";
+    
+    // Handle Azure AI Foundry endpoint format (services.ai.azure.com)
+    // or standard Azure OpenAI format (openai.azure.com)
+    let baseURL: string;
+    if (endpoint.includes("services.ai.azure.com")) {
+      // Azure AI Foundry format: https://[resource].services.ai.azure.com/api/projects/[project]
+      baseURL = `${endpoint.replace(/\/$/, "")}/openai/deployments/${deploymentName}`;
+    } else {
+      // Standard Azure OpenAI format: https://[resource].openai.azure.com/
+      baseURL = `${endpoint.replace(/\/$/, "")}/openai/deployments/${deploymentName}`;
+    }
+    
     azureOpenAI = new OpenAI({
       apiKey,
-      baseURL: `${endpoint.replace(/\/$/, "")}/openai/deployments/${deploymentName}`,
+      baseURL,
       defaultQuery: { "api-version": apiVersion },
       defaultHeaders: { "api-key": apiKey },
     });
