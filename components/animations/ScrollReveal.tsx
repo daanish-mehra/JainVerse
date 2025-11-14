@@ -22,8 +22,9 @@ export function ScrollReveal({
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: direction === "up" ? 60 : direction === "down" ? -60 : 0 }}
+      initial={{ opacity: 1, y: 0 }}
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+      whileInView={{ opacity: 1, y: 0 }}
       transition={{
         duration: 0.6,
         delay,
