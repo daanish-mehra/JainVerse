@@ -112,12 +112,12 @@ export default function HomePage() {
   
   return (
     <div className="min-h-screen pb-20 bg-gradient-to-b from-white via-ivory-50 to-white">
-      <div className="relative overflow-hidden">
+      <div className="relative">
         <motion.div
           initial={{ opacity: 0, scale: 1.1 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-          className="relative min-h-screen flex flex-col items-center justify-center px-6 py-20 bg-gradient-to-br from-saffron-50 via-white to-gold-50"
+          className="relative min-h-screen flex flex-col items-center justify-center px-6 py-20 bg-gradient-to-br from-saffron-50 via-white to-gold-50 overflow-hidden"
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(245,176,65,0.1),transparent_50%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,215,0,0.1),transparent_50%)]" />
