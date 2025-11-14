@@ -156,8 +156,7 @@ export default function HomePage() {
                 transition={{ duration: 1, delay: 1.5 }}
                 className="text-lg sm:text-xl md:text-2xl text-gray-700 font-light leading-relaxed px-2"
               >
-                Mobile App for{" "}
-                <span className="text-saffron-600 font-medium">JainVerse</span>
+                Where Ancient Wisdom Meets Modern AI
               </motion.p>
               
               <motion.p

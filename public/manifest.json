@@ -1,7 +1,7 @@
 {
-  "name": "JainAI - Mobile App for JainVerse",
+  "name": "JainAI",
   "short_name": "JainAI",
-  "description": "Mobile app for JainVerse - Your AI-powered companion for learning and practicing Jain philosophy, ethics, and rituals",
+  "description": "Your AI-powered companion for learning and practicing Jain philosophy, ethics, and rituals",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FFF8E7",

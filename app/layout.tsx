@@ -16,8 +16,8 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "JainAI - Mobile App for JainVerse",
-  description: "Mobile app for JainVerse - Your AI-powered companion for learning and practicing Jain philosophy, ethics, and rituals.",
+  title: "JainAI",
+  description: "Your AI-powered companion for learning and practicing Jain philosophy, ethics, and rituals.",
   manifest: "/manifest.json",
 };
 

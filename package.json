@@ -1,7 +1,7 @@
 {
   "name": "jainai",
   "version": "1.0.0",
-  "description": "JainAI - Mobile App for JainVerse - Where Ancient Wisdom Meets Modern AI",
+  "description": "JainAI - Where Ancient Wisdom Meets Modern AI",
   "private": true,
   "scripts": {
     "dev": "next dev",
