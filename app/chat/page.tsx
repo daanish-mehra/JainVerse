@@ -211,32 +211,6 @@ export default function ChatPage() {
             </motion.div>
           ))}
         </AnimatePresence>
-                        ))}
-                      </ul>
-                    </motion.div>
-                  )}
-                  {message.confidence && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.5 }}
-                      className="mt-3 text-xs opacity-80 flex items-center"
-                    >
-                      <Sparkles className="w-3 h-3 mr-1" />
-                      Confidence: {message.confidence}%
-                    </motion.div>
-                  )}
-                  <p className="text-xs opacity-70 mt-3">
-                    {message.timestamp.toLocaleTimeString("en-US", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </motion.div>
-              </motion.div>
-            </ScrollReveal>
-          ))}
-        </AnimatePresence>
 
         {isTyping && (
           <motion.div
