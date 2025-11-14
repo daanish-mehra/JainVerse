@@ -19,14 +19,12 @@ export function getAzureOpenAIClient(): OpenAI | null {
   try {
     const deploymentName = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "jainai-gpt4";
     
-    // Handle Azure AI Foundry endpoint format (services.ai.azure.com)
-    // or standard Azure OpenAI format (openai.azure.com)
     let baseURL: string;
     if (endpoint.includes("services.ai.azure.com")) {
-      // Azure AI Foundry format: https://[resource].services.ai.azure.com/api/projects/[project]
+      baseURL = `${endpoint.replace(/\/$/, "")}/openai/deployments/${deploymentName}`;
+    } else if (endpoint.includes("openai.azure.com")) {
       baseURL = `${endpoint.replace(/\/$/, "")}/openai/deployments/${deploymentName}`;
     } else {
-      // Standard Azure OpenAI format: https://[resource].openai.azure.com/
       baseURL = `${endpoint.replace(/\/$/, "")}/openai/deployments/${deploymentName}`;
     }
     
@@ -34,8 +32,13 @@ export function getAzureOpenAIClient(): OpenAI | null {
       apiKey,
       baseURL,
       defaultQuery: { "api-version": apiVersion },
-      defaultHeaders: { "api-key": apiKey },
+      defaultHeaders: { 
+        "api-key": apiKey,
+        "Content-Type": "application/json"
+      },
     });
+    
+    console.log("Azure OpenAI client initialized:", { baseURL, deploymentName, apiVersion });
 
     return azureOpenAI;
   } catch (error) {
@@ -78,11 +81,19 @@ Answer the user's question based on your knowledge of Jainism and the context pr
 
   try {
     const deploymentName = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "jainai-gpt4";
+    
     const response = await client.chat.completions.create({
       model: deploymentName,
       messages: chatMessages,
       temperature: 0.7,
       max_tokens: 1000,
+    }).catch((error: any) => {
+      console.error("Azure OpenAI API error details:", {
+        message: error.message,
+        status: error.status,
+        response: error.response?.data || error.error,
+      });
+      throw error;
     });
 
     const text = response.choices[0]?.message?.content || "I apologize, but I couldn't generate a response.";

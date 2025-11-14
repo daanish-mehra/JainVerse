@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getArticles } from "@/lib/cosmos";
+import { getArticles, getContainer } from "@/lib/cosmos";
 import { generateQuizFromArticle } from "@/lib/azure-openai";
 import fs from "fs";
 import path from "path";
@@ -235,10 +235,21 @@ function getDefaultLearningPaths() {
 
 async function generateQuizzesFromArticles(): Promise<any[]> {
   try {
+    const container = await getContainer("quizzes").catch(() => null);
+    if (container) {
+      const { resources } = await container.items.query({
+        query: "SELECT TOP 10 * FROM c ORDER BY c.createdAt DESC",
+      }).fetchAll();
+      
+      if (resources.length >= 5) {
+        return resources.map((q, idx) => ({ ...q, id: q.id || idx + 1 }));
+      }
+    }
+    
     let articles: any[] = [];
     
     try {
-      articles = await getArticles(10);
+      articles = await getArticles(20);
     } catch (error) {
       const articlesPath = path.join(process.cwd(), "data", "articles.json");
       if (fs.existsSync(articlesPath)) {
@@ -247,14 +258,13 @@ async function generateQuizzesFromArticles(): Promise<any[]> {
       }
     }
 
-    if (articles.length === 0) {
-      return getDefaultQuizzes();
-    }
-
     const quizzes: any[] = [];
     let quizId = 1;
+    const defaultQuizzes = getDefaultQuizzes();
+    quizzes.push(...defaultQuizzes);
+    quizId = defaultQuizzes.length + 1;
 
-    for (const article of articles.slice(0, 5)) {
+    for (const article of articles.slice(0, 10)) {
       try {
         const quiz = await generateQuizFromArticle({
           title: article.title || "Jain Teaching",
@@ -262,11 +272,17 @@ async function generateQuizzesFromArticles(): Promise<any[]> {
         });
         
         if (quiz) {
-          quizzes.push({
+          const quizData = {
             id: quizId++,
             ...quiz,
             topic: article.title || "Jain Philosophy",
-          });
+            createdAt: new Date().toISOString(),
+          };
+          quizzes.push(quizData);
+          
+          if (container) {
+            await container.items.upsert(quizData).catch(() => {});
+          }
         }
       } catch (error) {
         console.error(`Error generating quiz from article "${article.title}":`, error);
@@ -317,6 +333,60 @@ function getDefaultQuizzes() {
       explanation: "Samayik is a practice of equanimity and self-contemplation for spiritual purification.",
       source: "Jainworld.com",
       topic: "Meditation & Practices",
+    },
+    {
+      id: 5,
+      question: "Who was the 24th Tirthankara?",
+      options: ["Parshvanath", "Mahavira", "Rishabhanatha", "Neminath"],
+      correct: 1,
+      explanation: "Mahavira was the 24th and last Tirthankara of the current era in Jainism.",
+      source: "Jainworld.com",
+      topic: "History",
+    },
+    {
+      id: 6,
+      question: "What is Aparigraha?",
+      options: ["Non-violence", "Non-attachment", "Truth", "Non-stealing"],
+      correct: 1,
+      explanation: "Aparigraha means non-attachment or non-possessiveness, one of the five main vows in Jainism.",
+      source: "Tattvarth Sutra",
+      topic: "Jain Philosophy Basics",
+    },
+    {
+      id: 7,
+      question: "What is Karma in Jainism?",
+      options: ["Destiny", "Subtle matter that binds to the soul", "Actions only", "Punishment"],
+      correct: 1,
+      explanation: "In Jainism, karma is subtle matter that attaches to the soul based on thoughts, words, and actions.",
+      source: "Tattvarth Sutra",
+      topic: "Philosophy",
+    },
+    {
+      id: 8,
+      question: "What is Moksha?",
+      options: ["Heaven", "Liberation from cycle of rebirth", "Enlightenment only", "Death"],
+      correct: 1,
+      explanation: "Moksha is the ultimate liberation from the cycle of birth and death (samsara) in Jainism.",
+      source: "Tattvarth Sutra",
+      topic: "Philosophy",
+    },
+    {
+      id: 9,
+      question: "What are the three jewels of Jainism?",
+      options: ["Right faith, right knowledge, right conduct", "Gold, silver, diamond", "Ahimsa, Satya, Asteya", "Meditation, prayer, fasting"],
+      correct: 0,
+      explanation: "The three jewels (Ratnatraya) are right faith (Samyak Darshan), right knowledge (Samyak Jnana), and right conduct (Samyak Charitra).",
+      source: "Tattvarth Sutra",
+      topic: "Philosophy",
+    },
+    {
+      id: 10,
+      question: "What is Pratikraman?",
+      options: ["Meditation", "Forgiveness ritual and self-reflection", "Prayer", "Fasting"],
+      correct: 1,
+      explanation: "Pratikraman is a ritual of repentance and self-reflection where Jains seek forgiveness for their mistakes.",
+      source: "Jainworld.com",
+      topic: "Practices",
     },
   ];
 }
@@ -387,18 +457,40 @@ export async function GET(request: NextRequest) {
   }
 
   if (type === "achievements") {
-    return NextResponse.json({
-      achievements: mockAchievements,
-    });
+    try {
+      const progressRes = await fetch(`${request.nextUrl.origin}/api/learn/progress`);
+      const progressData = await progressRes.json();
+      
+      const allAchievements = [
+        { id: 1, title: "First Steps", icon: "🌱", description: "Complete your first quiz", earned: (progressData.totalQuizzesCompleted || 0) > 0 },
+        { id: 2, title: "Quiz Master", icon: "🥇", description: "Complete 10 quizzes", earned: (progressData.totalQuizzesCompleted || 0) >= 10 },
+        { id: 3, title: "Story Lover", icon: "📚", description: "Read 5 stories", earned: (progressData.totalStoriesRead || 0) >= 5 },
+        { id: 4, title: "Path Finder", icon: "🛤️", description: "Complete a learning path", earned: (progressData.learningPathsCompleted || 0) > 0 },
+        { id: 5, title: "Punya Collector", icon: "✨", description: "Earn 100 Punya points", earned: (progressData.punyaPoints || 0) >= 100 },
+        { id: 6, title: "Level Up", icon: "⬆️", description: "Reach level 5", earned: (progressData.level || 0) >= 5 },
+        { id: 7, title: "Perfect Score", icon: "💯", description: "Get 5 perfect quiz scores", earned: false },
+        { id: 8, title: "Daily Learner", icon: "📅", description: "Learn for 7 days straight", earned: false },
+      ];
+      
+      return NextResponse.json({ achievements: allAchievements });
+    } catch (error) {
+      return NextResponse.json({ achievements: mockAchievements });
+    }
   }
 
   if (type === "progress") {
-    return NextResponse.json({
-      punyaPoints: 250,
-      level: 5,
-      totalQuizzesCompleted: 12,
-      totalStoriesRead: 8,
-    });
+    try {
+      const progressRes = await fetch(`${request.nextUrl.origin}/api/learn/progress`);
+      const progressData = await progressRes.json();
+      return NextResponse.json(progressData);
+    } catch (error) {
+      return NextResponse.json({
+        punyaPoints: 0,
+        level: 1,
+        totalQuizzesCompleted: 0,
+        totalStoriesRead: 0,
+      });
+    }
   }
 
   return NextResponse.json({
@@ -431,6 +523,18 @@ export async function POST(request: NextRequest) {
 
       const isCorrect = quiz.correct === answer;
       const points = isCorrect ? 10 : 0;
+      
+      if (isCorrect) {
+        try {
+          await fetch(`${request.nextUrl.origin}/api/learn/progress`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "quiz-completed", quizId, points }),
+          });
+        } catch (error) {
+          console.error("Failed to update progress:", error);
+        }
+      }
 
       return NextResponse.json({
         correct: isCorrect,

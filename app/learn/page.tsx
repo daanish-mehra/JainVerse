@@ -214,7 +214,27 @@ export default function LearnPage() {
                             />
                           </div>
                         </div>
-                        <Button className="w-full bg-gradient-to-r from-saffron-500 to-gold-500 hover:shadow-xl hover:scale-105 transition-all">
+                        <Button 
+                          onClick={async () => {
+                            try {
+                              const response = await fetch('/api/learn', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ action: 'update-path-progress', pathId: path.id }),
+                              });
+                              const result = await response.json();
+                              if (result.success) {
+                                const updatedPaths = learningPaths.map(p => 
+                                  p.id === path.id ? { ...p, progress: Math.min(p.progress + 10, 100) } : p
+                                );
+                                setLearningPaths(updatedPaths);
+                              }
+                            } catch (error) {
+                              console.error('Error updating path progress:', error);
+                            }
+                          }}
+                          className="w-full bg-gradient-to-r from-saffron-500 to-gold-500 hover:shadow-xl hover:scale-105 transition-all"
+                        >
                           Continue Learning
                         </Button>
                       </CardContent>
@@ -241,7 +261,7 @@ export default function LearnPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {quizzes.slice(0, 1).map((quiz) => (
+                {quizzes.map((quiz) => (
                   <motion.div
                     key={quiz.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -329,7 +349,7 @@ export default function LearnPage() {
             <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
               Engaging stories for different age groups
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
               {stories.map((story, index) => (
                 <ScrollReveal key={story.id} direction="up" delay={index * 0.1}>
                   <motion.div
@@ -362,8 +382,8 @@ export default function LearnPage() {
                 </ScrollReveal>
               ))}
               <ScrollReveal direction="up" delay={0.2}>
-                <motion.div whileHover={{ scale: 1.03, y: -6 }}>
-                  <Card className="h-full border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 hover:shadow-xl transition-all duration-300">
+                <motion.div whileHover={{ scale: 1.02, y: -4 }}>
+                  <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 hover:shadow-xl transition-all duration-300">
                     <CardContent className="p-6">
                       <h3 className="font-bold text-xl text-gray-900 mb-3">🤔 Ethical Dilemma</h3>
                       <div className="flex flex-wrap gap-2 text-sm text-gray-600 mb-4">
