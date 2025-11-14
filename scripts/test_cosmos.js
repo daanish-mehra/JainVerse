@@ -21,7 +21,8 @@ async function testConnection() {
   try {
     console.log('📡 Connecting to:', endpoint.replace(/\/\/.*@/, '//***@'));
     
-    const { databases } = await client.databases.readAll().fetchAll();
+    const databasesResult = await client.databases.readAll().fetchAll();
+    const databases = databasesResult.resources || databasesResult || [];
     console.log(`✅ Connected! Found ${databases.length} database(s)\n`);
     
     const db = client.database(databaseId);

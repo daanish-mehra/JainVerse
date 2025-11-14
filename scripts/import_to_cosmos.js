@@ -1,6 +1,7 @@
 const { CosmosClient } = require('@azure/cosmos');
 const fs = require('fs').promises;
 const path = require('path');
+require('dotenv').config({ path: '.env.local' });
 
 const endpoint = process.env.AZURE_COSMOS_ENDPOINT;
 const key = process.env.AZURE_COSMOS_KEY;

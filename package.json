@@ -11,7 +11,9 @@
     "scrape": "node scripts/scrape_jainworld.js",
     "setup-db": "node scripts/setup_database.js",
     "import-cosmos": "node scripts/import_to_cosmos.js",
-    "test-cosmos": "node scripts/test_cosmos.js"
+    "test-cosmos": "node scripts/test_cosmos.js",
+    "setup-env": "node scripts/setup_env.js",
+    "complete-setup": "node scripts/complete_setup.js"
   },
   "dependencies": {
     "@azure/cosmos": "^4.7.0",
