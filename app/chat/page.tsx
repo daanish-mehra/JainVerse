@@ -191,22 +191,25 @@ export default function ChatPage() {
                   transition={{ duration: 0.5 }}
                   className="text-sm leading-relaxed whitespace-pre-wrap"
                 >
-                  {message.text.split('').map((char, idx) => (
-                    <motion.span
-                      key={idx}
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        delay: idx * 0.01,
-                        duration: 0.3,
-                      }}
-                      style={{
-                        display: 'inline-block',
-                      }}
-                    >
-                      {char === ' ' ? '\u00A0' : char}
-                    </motion.span>
-                  ))}
+                  {message.text.length < 200 
+                    ? message.text.split('').map((char, idx) => (
+                        <motion.span
+                          key={idx}
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{
+                            delay: idx * 0.005,
+                            duration: 0.2,
+                          }}
+                          style={{
+                            display: 'inline-block',
+                          }}
+                        >
+                          {char === ' ' ? '\u00A0' : char}
+                        </motion.span>
+                      ))
+                    : message.text
+                  }
                 </motion.p>
                 {message.sources && message.sources.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-white/20">
