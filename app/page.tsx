@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { MessageCircle, BookOpen, Heart, Book, Mic, Sparkles, ArrowDown } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,10 +11,57 @@ import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { Typewriter } from "@/components/animations/Typewriter";
 import { FadeIn } from "@/components/animations/FadeIn";
 
-const dailyWisdom = {
-  quote: "Ahimsa is the highest virtue",
-  author: "Mahavira",
-  explanation: "Non-violence towards all living beings is the fundamental principle of Jainism. It means not causing harm through thought, word, or deed.",
+interface DailyQuote {
+  quote: string;
+  author: string;
+  explanation: string;
+}
+
+const jainQuotes = [
+  {
+    quote: "Ahimsa is the highest virtue",
+    author: "Mahavira",
+    explanation: "Non-violence towards all living beings is the fundamental principle of Jainism. It means not causing harm through thought, word, or deed.",
+  },
+  {
+    quote: "Live and let live",
+    author: "Jain Proverb",
+    explanation: "This principle emphasizes respecting all life forms and allowing them to exist peacefully without interference.",
+  },
+  {
+    quote: "The soul is the master of its own destiny",
+    author: "Jain Philosophy",
+    explanation: "Every soul has the potential to achieve liberation through right conduct, right knowledge, and right faith.",
+  },
+  {
+    quote: "Non-possessiveness leads to inner peace",
+    author: "Aparigraha Principle",
+    explanation: "By minimizing attachments to material possessions, one achieves spiritual freedom and tranquility.",
+  },
+  {
+    quote: "Truth is multifaceted",
+    author: "Anekantvad",
+    explanation: "Reality has multiple aspects, and one should consider different perspectives before forming conclusions.",
+  },
+  {
+    quote: "Every living being deserves respect",
+    author: "Jain Ethics",
+    explanation: "From the smallest microorganism to the largest being, all life has intrinsic value and deserves compassion.",
+  },
+  {
+    quote: "Self-control is the path to liberation",
+    author: "Jain Teachings",
+    explanation: "Mastering one's passions and desires through discipline leads to spiritual progress and ultimate freedom.",
+  },
+  {
+    quote: "Non-violence begins with non-violent thoughts",
+    author: "Jain Wisdom",
+    explanation: "True ahimsa starts in the mind - controlling harmful thoughts is as important as controlling harmful actions.",
+  },
+];
+
+const getRandomQuote = () => {
+  return jainQuotes[Math.floor(Math.random() * jainQuotes.length)];
 };
 
 const quickActions = [
@@ -26,6 +74,29 @@ const quickActions = [
 ];
 
 export default function HomePage() {
+  const [dailyWisdom, setDailyWisdom] = useState<DailyQuote>(getRandomQuote());
+
+  useEffect(() => {
+    const fetchQuote = async () => {
+      try {
+        const response = await fetch('/api/quotes');
+        const data = await response.json();
+        if (data.success) {
+          setDailyWisdom({
+            quote: data.quote,
+            author: data.author,
+            explanation: data.explanation,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching quote:', error);
+        setDailyWisdom(getRandomQuote());
+      }
+    };
+
+    fetchQuote();
+  }, []);
+  
   return (
     <div className="min-h-screen pb-20 bg-gradient-to-b from-white via-ivory-50 to-white">
       <div className="relative overflow-hidden">
@@ -139,7 +210,7 @@ export default function HomePage() {
                   transition={{ duration: 0.6 }}
                 >
                   <CardTitle className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                    💡 Daily Jain Reflection
+                    💡 Daily Reflection
                   </CardTitle>
                 </motion.div>
               </CardHeader>
@@ -189,35 +260,42 @@ export default function HomePage() {
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+        <div className="space-y-4 max-w-2xl mx-auto">
           {quickActions.map((action, index) => {
             const Icon = action.icon;
             return (
               <ScrollReveal key={action.label} direction="up" delay={index * 0.1}>
                 <motion.div
-                  whileHover={{ scale: 1.05, y: -8 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.02, x: 10, y: -4 }}
+                  whileTap={{ scale: 0.98 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   <Link href={action.href}>
-                    <Card className="h-full group cursor-pointer border-2 border-transparent hover:border-saffron-200 transition-all duration-300 bg-white hover:shadow-2xl relative overflow-hidden flex flex-col">
-                      <div className="absolute inset-0 bg-gradient-to-br from-white to-gray-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <CardContent className="p-6 sm:p-8 space-y-4 relative z-10 flex flex-col flex-1">
+                    <Card className="group cursor-pointer border-2 border-transparent hover:border-saffron-200 transition-all duration-300 bg-white hover:shadow-2xl relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-saffron-50 via-transparent to-gold-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <CardContent className="p-6 relative z-10 flex items-center space-x-4">
                         <motion.div
-                          whileHover={{ rotate: [0, -10, 10, -10, 0] }}
+                          whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }}
                           transition={{ duration: 0.5 }}
-                          className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${action.color} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300 flex-shrink-0`}
+                          className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${action.color} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300 flex-shrink-0`}
                         >
-                          <Icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                          <Icon className="w-7 h-7 text-white" />
                         </motion.div>
-                        <div className="flex-1 flex flex-col">
-                          <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-2 group-hover:text-saffron-600 transition-colors break-words">
+                        <div className="flex-1">
+                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 group-hover:text-saffron-600 transition-colors">
                             {action.label}
                           </h3>
-                          <p className="text-xs sm:text-sm text-gray-600 leading-relaxed break-words overflow-wrap-anywhere flex-1">
+                          <p className="text-sm text-gray-600 leading-relaxed">
                             {action.description}
                           </p>
                         </div>
+                        <motion.div
+                          initial={{ opacity: 0, x: -10 }}
+                          whileHover={{ opacity: 1, x: 0 }}
+                          className="text-saffron-500"
+                        >
+                          →
+                        </motion.div>
                       </CardContent>
                     </Card>
                   </Link>
