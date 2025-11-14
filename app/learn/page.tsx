@@ -122,7 +122,7 @@ export default function LearnPage() {
     }
   };
 
-  if (loading) {
+  if (loading && learningPaths.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

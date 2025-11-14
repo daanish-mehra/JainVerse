@@ -250,54 +250,7 @@ async function generateQuizzesFromArticles(): Promise<any[]> {
       }
     }
     
-    let articles: any[] = [];
-    
-    try {
-      articles = await getArticles(20);
-    } catch (error) {
-      const articlesPath = path.join(process.cwd(), "data", "articles.json");
-      if (fs.existsSync(articlesPath)) {
-        const fileContent = fs.readFileSync(articlesPath, "utf-8");
-        articles = JSON.parse(fileContent);
-      }
-    }
-
-    const quizzes: any[] = [];
-    let quizId = 1;
-    const defaultQuizzes = getDefaultQuizzes();
-    quizzes.push(...defaultQuizzes);
-    quizId = defaultQuizzes.length + 1;
-
-    for (const article of articles.slice(0, 10)) {
-      try {
-        const quiz = await generateQuizFromArticle({
-          title: article.title || "Jain Teaching",
-          content: article.content || "",
-        });
-        
-        if (quiz) {
-          const quizData = {
-            id: quizId++,
-            ...quiz,
-            topic: article.title || "Jain Philosophy",
-            createdAt: new Date().toISOString(),
-          };
-          quizzes.push(quizData);
-          
-          if (container) {
-            try {
-              await container.items.upsert(quizData);
-            } catch (error) {
-              console.warn("Failed to save quiz to Cosmos DB:", error);
-            }
-          }
-        }
-      } catch (error) {
-        console.error(`Error generating quiz from article "${article.title}":`, error);
-      }
-    }
-
-    return quizzes.length > 0 ? quizzes : getDefaultQuizzes();
+    return getDefaultQuizzes();
   } catch (error) {
     console.error("Error generating quizzes:", error);
     return getDefaultQuizzes();

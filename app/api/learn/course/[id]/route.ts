@@ -127,10 +127,11 @@ async function getLearningPathsFromData() {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const courseId = parseInt(params.id);
+    const { id } = await params;
+    const courseId = parseInt(id);
     const paths = await getLearningPathsFromData();
     const course = paths.find((p) => p.id === courseId);
 
@@ -207,10 +208,11 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const courseId = parseInt(params.id);
+    const { id } = await params;
+    const courseId = parseInt(id);
     const body = await request.json();
     const { action, moduleId, articleId } = body;
 
