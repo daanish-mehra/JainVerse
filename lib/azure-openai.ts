@@ -92,11 +92,11 @@ export async function generateQuizFromArticle(article: { title: string; content:
   correct: number;
   explanation: string;
   source: string;
-}> {
+} | null> {
   const client = getAzureOpenAIClient();
   
   if (!client) {
-    throw new Error("Azure OpenAI not configured");
+    return null;
   }
 
   const prompt = `Based on the following Jain article, create a multiple-choice quiz question with 4 options.

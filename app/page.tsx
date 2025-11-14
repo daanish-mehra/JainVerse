@@ -261,15 +261,17 @@ export default function HomePage() {
                             >
                               "{dailyWisdom.quote}"
                             </motion.p>
-                            <motion.p
-                              initial={{ opacity: 0 }}
-                              whileInView={{ opacity: 1 }}
-                              viewport={{ once: true }}
-                              transition={{ duration: 0.8, delay: 0.4 }}
-                              className="text-base sm:text-lg text-saffron-600 font-medium"
-                            >
-                              — {dailyWisdom.author}
-                            </motion.p>
+                            {dailyWisdom.author && dailyWisdom.author.trim() && (
+                              <motion.p
+                                initial={{ opacity: 0 }}
+                                whileInView={{ opacity: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.8, delay: 0.4 }}
+                                className="text-base sm:text-lg text-saffron-600 font-medium"
+                              >
+                                — {dailyWisdom.author}
+                              </motion.p>
+                            )}
                             <motion.div
                               initial={{ opacity: 0, y: 20 }}
                               whileInView={{ opacity: 1, y: 0 }}

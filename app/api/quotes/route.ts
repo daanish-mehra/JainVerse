@@ -56,46 +56,26 @@ const fallbackQuotes = [
 
 export async function GET(request: NextRequest) {
   try {
-    let quote = null;
-    
-    try {
-      quote = await getRandomQuote();
-    } catch (error) {
-      console.warn('Cosmos DB not available, using fallback quotes:', error instanceof Error ? error.message : 'Unknown error');
-    }
-    
-    if (quote && quote.quote && quote.quote.trim().length > 0) {
-      const quoteText = quote.quote.trim();
-      const hasJainKeywords = /ahimsa|mahavira|jain|soul|karma|moksha|jiv|sutra|aparigraha|anekantvad/i.test(quoteText);
-      
-      if (hasJainKeywords || quote.author) {
-        return NextResponse.json({
-          success: true,
-          quote: quoteText,
-          author: quote.author || 'Jain Wisdom',
-          explanation: quote.source || 'From Jain scriptures and teachings',
-        });
-      }
-    }
-    
-    const randomQuote = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
+    const randomQuoteText = jainQuotes[Math.floor(Math.random() * jainQuotes.length)];
+    const explanation = getQuoteExplanation(randomQuoteText);
     
     return NextResponse.json({
       success: true,
-      quote: randomQuote.quote,
-      author: randomQuote.author,
-      explanation: randomQuote.explanation,
+      quote: randomQuoteText,
+      author: "",
+      explanation: explanation,
     });
   } catch (error) {
     console.error('Quotes API error:', error);
     
-    const randomQuote = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
+    const randomQuoteText = jainQuotes[Math.floor(Math.random() * jainQuotes.length)];
+    const explanation = getQuoteExplanation(randomQuoteText);
     
     return NextResponse.json({
       success: true,
-      quote: randomQuote.quote,
-      author: randomQuote.author,
-      explanation: randomQuote.explanation,
+      quote: randomQuoteText,
+      author: "",
+      explanation: explanation,
     });
   }
 }

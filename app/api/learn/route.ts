@@ -261,11 +261,13 @@ async function generateQuizzesFromArticles(): Promise<any[]> {
           content: article.content || "",
         });
         
-        quizzes.push({
-          id: quizId++,
-          ...quiz,
-          topic: article.title || "Jain Philosophy",
-        });
+        if (quiz) {
+          quizzes.push({
+            id: quizId++,
+            ...quiz,
+            topic: article.title || "Jain Philosophy",
+          });
+        }
       } catch (error) {
         console.error(`Error generating quiz from article "${article.title}":`, error);
       }
