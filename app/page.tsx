@@ -17,61 +17,36 @@ interface DailyQuote {
   explanation: string;
 }
 
-const jainQuotes = [
+const jainQuotesFallback = [
   {
-    quote: "Ahimsa paramo dharma - Non-violence is the highest religion",
-    author: "Mahavira",
-    explanation: "Non-violence towards all living beings is the fundamental principle of Jainism. It means not causing harm through thought, word, or deed to any sentient being.",
+    quote: "Non-violence must be practiced in thought, speech, and action.",
+    author: "",
+    explanation: "Ahimsa (non-violence) is the foundation of Jainism. It means not causing harm through thought, word, or deed to any living being, regardless of size or form.",
   },
   {
-    quote: "Jivo jivasya jivanam - One living being is the sustenance of another",
-    author: "Acharya Kundakunda",
-    explanation: "This principle emphasizes the interdependence of all life forms and respecting all living beings while understanding their natural roles in the ecosystem.",
+    quote: "Every living being, however small, desires to live and should be protected.",
+    author: "",
+    explanation: "Jainism teaches the equality of all souls. Compassion and respect for all living beings arise from understanding this fundamental principle.",
   },
   {
-    quote: "The soul is the master of its own destiny through right conduct, right knowledge, and right faith",
-    author: "Tattvarth Sutra",
-    explanation: "Every soul has the potential to achieve liberation (moksha) through the three jewels of Jainism: right faith, right knowledge, and right conduct.",
+    quote: "Reality has many perspectives; no single viewpoint is complete.",
+    author: "",
+    explanation: "Anekantvad (non-absolutism) teaches that reality has multiple aspects and can be understood from various perspectives, promoting tolerance and understanding.",
   },
   {
-    quote: "Aparigraha - Non-possessiveness leads to inner peace and spiritual freedom",
-    author: "Jain Philosophy",
-    explanation: "By minimizing attachments to material possessions and desires, one achieves spiritual freedom and tranquility, reducing karmic bondage.",
+    quote: "You are solely responsible for your spiritual progress.",
+    author: "",
+    explanation: "Jainism teaches that every soul has the potential to achieve liberation (moksha) through right faith, right knowledge, and right conduct.",
   },
   {
-    quote: "Anekantvad - Reality is multifaceted and can be viewed from multiple perspectives",
-    author: "Jain Doctrine",
-    explanation: "The doctrine of non-absolutism teaches that truth and reality are complex and can be understood from various viewpoints, promoting tolerance and understanding.",
-  },
-  {
-    quote: "Every living being, from the smallest microorganism to the largest being, deserves respect and compassion",
-    author: "Jain Ethics",
-    explanation: "All life has intrinsic value. Jains practice extreme care to avoid harming even the smallest forms of life, reflecting deep respect for all souls.",
-  },
-  {
-    quote: "Samyak Darshan, Samyak Jnana, Samyak Charitra - Right faith, right knowledge, and right conduct lead to liberation",
-    author: "Tattvarth Sutra",
-    explanation: "These three jewels of Jainism are essential for spiritual progress. Together they form the path to moksha, freeing the soul from the cycle of birth and death.",
-  },
-  {
-    quote: "Non-violence begins with non-violent thoughts, as thoughts lead to words and actions",
-    author: "Acharya Umaswati",
-    explanation: "True ahimsa starts in the mind. Controlling harmful thoughts, anger, and negative emotions is as important as controlling harmful actions, preventing karmic accumulation.",
-  },
-  {
-    quote: "Karma is the cause of bondage - actions, thoughts, and words create karma that binds the soul",
-    author: "Tattvarth Sutra",
-    explanation: "Every thought, word, and deed creates karma particles that attach to the soul, keeping it bound to the cycle of samsara. Liberation requires eliminating all karmas.",
-  },
-  {
-    quote: "The five great vows (Mahavratas) are the foundation of Jain spiritual practice",
-    author: "Jain Teachings",
-    explanation: "Ahimsa (non-violence), Satya (truth), Asteya (non-stealing), Brahmacharya (celibacy), and Aparigraha (non-possessiveness) guide the path to spiritual purity and liberation.",
+    quote: "Possessiveness creates attachment, which leads to suffering.",
+    author: "",
+    explanation: "Aparigraha (non-possessiveness) emphasizes reducing attachments to material things and desires, leading to inner freedom and spiritual liberation.",
   },
 ];
 
 const getRandomQuote = () => {
-  return jainQuotes[Math.floor(Math.random() * jainQuotes.length)];
+  return jainQuotesFallback[Math.floor(Math.random() * jainQuotesFallback.length)];
 };
 
 const quickActions = [
@@ -99,18 +74,26 @@ export default function HomePage() {
       try {
         const response = await fetch('/api/quotes');
         const data = await response.json();
-        if (data.success && data.quote && data.author) {
+        if (data.success && data.quote) {
           setDailyWisdom({
             quote: data.quote,
-            author: data.author,
+            author: "",
             explanation: data.explanation || 'From Jain scriptures and teachings',
           });
         } else {
-          setDailyWisdom(getRandomQuote());
+          const fallback = getRandomQuote();
+          setDailyWisdom({
+            ...fallback,
+            author: "",
+          });
         }
       } catch (error) {
         console.error('Error fetching quote:', error);
-        setDailyWisdom(getRandomQuote());
+        const fallback = getRandomQuote();
+        setDailyWisdom({
+          ...fallback,
+          author: "",
+        });
       }
     };
 
@@ -261,17 +244,6 @@ export default function HomePage() {
                             >
                               "{dailyWisdom.quote}"
                             </motion.p>
-                            {dailyWisdom.author && dailyWisdom.author.trim() && (
-                              <motion.p
-                                initial={{ opacity: 0 }}
-                                whileInView={{ opacity: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.8, delay: 0.4 }}
-                                className="text-base sm:text-lg text-saffron-600 font-medium"
-                              >
-                                — {dailyWisdom.author}
-                              </motion.p>
-                            )}
                             <motion.div
                               initial={{ opacity: 0, y: 20 }}
                               whileInView={{ opacity: 1, y: 0 }}
