@@ -56,8 +56,8 @@ export default function SectionPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "complete-section",
-          sectionId,
+          action: "complete-module",
+          moduleId: sectionId,
         }),
       });
 

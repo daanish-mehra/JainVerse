@@ -575,7 +575,7 @@ export default function PracticePage() {
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500" />
               <CardHeader>
                 <CardTitle className="text-xl sm:text-2xl font-bold text-gray-900">💭 Reflections</CardTitle>
-                <CardDescription className="text-base">Daily Reflection</CardDescription>
+                <CardDescription className="text-base text-black">Daily Reflection</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-gray-700 font-medium">
@@ -589,10 +589,18 @@ export default function PracticePage() {
                 />
                 <Button 
                   onClick={handleSaveReflection}
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-xl hover:scale-105 transition-all rounded-xl"
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-xl hover:scale-105 transition-all rounded-xl text-white"
                 >
                   Save Reflection
                 </Button>
+                <Link href="/practice/reflections" className="block">
+                  <Button 
+                    variant="outline"
+                    className="w-full border-2 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400 transition-all rounded-xl"
+                  >
+                    View Past Reflections
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>

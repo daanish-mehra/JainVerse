@@ -204,6 +204,34 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(progress);
     }
 
+    if (type === "reflections") {
+      const container = await getContainer("reflections");
+      let reflections: any[] = [];
+
+      if (container) {
+        try {
+          const { resources } = await container.items.query({
+            query: "SELECT * FROM c WHERE c.userId = @userId ORDER BY c.createdAt DESC",
+            parameters: [{ name: "@userId", value: userId }],
+          }).fetchAll();
+
+          reflections = resources.map((r: any) => ({
+            id: r.id,
+            text: r.text,
+            date: r.date,
+            createdAt: r.createdAt,
+            timestamp: r.timestamp || new Date(r.createdAt).getTime(),
+          }));
+        } catch (error) {
+          console.warn("Failed to fetch reflections:", error);
+        }
+      }
+
+      return NextResponse.json({
+        reflections,
+      });
+    }
+
     return NextResponse.json({
       practices: defaultPractices,
       vratas: mockVratas,
@@ -370,20 +398,24 @@ export async function POST(request: NextRequest) {
       }
 
       const container = await getContainer("reflections");
-      const reflectionDate = date || new Date().toISOString().split("T")[0];
+      const now = new Date();
+      const reflectionDate = date || now.toISOString().split("T")[0];
+      const timestamp = now.getTime();
 
       if (container) {
         try {
-          const reflectionId = `${userId}-${reflectionDate}`;
+          // Use timestamp-based ID to allow multiple reflections per day
+          const reflectionId = `${userId}-${timestamp}`;
           const reflectionData = {
             id: reflectionId,
             userId,
             date: reflectionDate,
             text: reflection,
-            createdAt: new Date().toISOString(),
+            createdAt: now.toISOString(),
+            timestamp: timestamp,
           };
 
-          await container.items.upsert(reflectionData);
+          await container.items.create(reflectionData);
         } catch (error) {
           console.error("Failed to save reflection:", error);
         }
@@ -393,9 +425,10 @@ export async function POST(request: NextRequest) {
         success: true,
         message: "Reflection saved successfully",
         reflection: {
-          id: Date.now(),
+          id: timestamp,
           text: reflection,
           date: reflectionDate,
+          createdAt: now.toISOString(),
         },
       });
     }
