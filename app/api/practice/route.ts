@@ -294,15 +294,19 @@ export async function POST(request: NextRequest) {
                 practicesCompleted: 1,
               });
 
-              const sortedHistory = progressData.practiceHistory
-                .map((h: any) => new Date(h.date).getTime())
+              const sortedDates = progressData.practiceHistory
+                .map((h: any) => h.date)
+                .filter((date: string) => date)
+                .map((date: string) => new Date(date).getTime())
                 .sort((a: number, b: number) => b - a);
 
               let streak = 1;
               const todayTime = new Date(today).getTime();
-              for (let i = 0; i < sortedHistory.length; i++) {
+              for (let i = 1; i < sortedDates.length; i++) {
                 const expectedDate = todayTime - i * 24 * 60 * 60 * 1000;
-                if (sortedHistory[i] === expectedDate) {
+                const actualDate = sortedDates[i];
+                const diff = Math.abs(actualDate - expectedDate);
+                if (diff < 24 * 60 * 60 * 1000) {
                   streak = i + 1;
                 } else {
                   break;
