@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
     {
       id: 1,
       name: "Ekasan Vrata",
-      day: 3,
+      day: 0,
       totalDays: 30,
       progress: 0,
       startDate: new Date().toISOString(),

@@ -43,7 +43,7 @@ const mockVratas = [
   {
     id: 1,
     name: "Ekasan Vrata",
-    day: 3,
+    day: 0,
     totalDays: 30,
     progress: 0,
     description: "A vow to eat only one meal a day.",
@@ -94,10 +94,10 @@ export async function GET(request: NextRequest) {
 
   if (type === "progress") {
     return NextResponse.json({
-      streak: 7,
-      totalPractices: 120,
-      vratasCompleted: 5,
-      thisMonth: 20,
+      streak: 0,
+      totalPractices: 0,
+      vratasCompleted: 0,
+      thisMonth: 0,
     });
   }
 

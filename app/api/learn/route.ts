@@ -380,8 +380,8 @@ const mockStories = [
 ];
 
 const mockAchievements = [
-  { id: 1, title: "Philosophy Master", icon: "🥇", earned: true, description: "Completed all philosophy modules." },
-  { id: 2, title: "Practice Champion", icon: "🥈", earned: true, description: "Maintained a 30-day practice streak." },
+  { id: 1, title: "Philosophy Master", icon: "🥇", earned: false, description: "Completed all philosophy modules." },
+  { id: 2, title: "Practice Champion", icon: "🥈", earned: false, description: "Maintained a 30-day practice streak." },
   { id: 3, title: "Quiz Expert", icon: "🥉", earned: false, description: "Scored 100% on 10 quizzes." },
   { id: 4, title: "Mantra Maestro", icon: "🌟", earned: false, description: "Recited 108 mantras daily for a week." },
 ];

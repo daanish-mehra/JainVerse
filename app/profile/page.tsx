@@ -6,11 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 
 const stats = {
-  streak: 7,
-  lessons: 12,
+  streak: 0,
+  lessons: 0,
   totalLessons: 20,
   badges: 0,
-  chats: 45,
+  chats: 0,
 };
 
 const settings = [
