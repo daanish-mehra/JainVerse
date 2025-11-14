@@ -1,43 +1,235 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getArticles } from "@/lib/cosmos";
+import fs from "fs";
+import path from "path";
 
-const mockLearningPaths = [
-  {
-    id: 1,
-    title: "Jain Philosophy Basics",
-    progress: 80,
-    badges: 3,
-    totalBadges: 5,
-    level: "Beginner",
-    description: "Learn the fundamental principles of Jainism",
-  },
-  {
-    id: 2,
-    title: "Meditation & Practices",
-    progress: 60,
-    badges: 2,
-    totalBadges: 5,
-    level: "Intermediate",
-    description: "Discover meditation techniques and daily practices",
-  },
-  {
-    id: 3,
-    title: "Mantras & Prayers",
-    progress: 40,
-    badges: 1,
-    totalBadges: 5,
-    level: "Beginner",
-    description: "Master Jain mantras and prayers",
-  },
-  {
-    id: 4,
-    title: "Jain Ethics in Daily Life",
-    progress: 20,
-    badges: 0,
-    totalBadges: 5,
-    level: "Beginner",
-    description: "Apply Jain ethical principles to modern living",
-  },
-];
+async function getLearningPathsFromData() {
+  try {
+    let articles: any[] = [];
+    
+    // Try to get from Cosmos DB first
+    try {
+      articles = await getArticles(100);
+    } catch (error) {
+      // Fallback to local file
+      const articlesPath = path.join(process.cwd(), "data", "articles.json");
+      if (fs.existsSync(articlesPath)) {
+        const fileContent = fs.readFileSync(articlesPath, "utf-8");
+        articles = JSON.parse(fileContent);
+      }
+    }
+
+    // Organize articles into learning paths based on titles and content
+    const paths: any[] = [];
+    const pathCategories: { [key: string]: any[] } = {
+      "Philosophy": [],
+      "History": [],
+      "Principles": [],
+      "Practices": [],
+      "Scriptures": [],
+      "Mantras": [],
+    };
+
+    articles.forEach((article) => {
+      const title = article.title?.toLowerCase() || "";
+      const content = article.content?.toLowerCase() || "";
+      const url = article.url?.toLowerCase() || "";
+
+      if (title.includes("philosophy") || content.includes("philosophy") || url.includes("philosophy")) {
+        pathCategories["Philosophy"].push(article);
+      } else if (title.includes("history") || url.includes("history")) {
+        pathCategories["History"].push(article);
+      } else if (title.includes("principle") || url.includes("principle")) {
+        pathCategories["Principles"].push(article);
+      } else if (title.includes("practice") || title.includes("meditation") || title.includes("yoga") || 
+                 content.includes("meditation") || content.includes("dhyan") || content.includes("samayik") ||
+                 content.includes("pratikraman") || content.includes("fasting") || content.includes("tapa")) {
+        pathCategories["Practices"].push(article);
+      } else if (title.includes("scripture") || title.includes("tattvarth") || title.includes("samayasar") ||
+                 content.includes("acharya kundkund") || content.includes("sutra")) {
+        pathCategories["Scriptures"].push(article);
+      } else if (title.includes("mantra") || title.includes("namokar") || title.includes("prayer") ||
+                 content.includes("namokar") || content.includes("mantra")) {
+        pathCategories["Mantras"].push(article);
+      }
+    });
+
+    // Create learning paths from categorized articles
+    let pathId = 1;
+    
+    if (pathCategories["Principles"].length > 0) {
+      paths.push({
+        id: pathId++,
+        title: "Jain Principles & Fundamentals",
+        progress: 80,
+        badges: 3,
+        totalBadges: 5,
+        level: "Beginner",
+        description: "Learn the core principles of Jainism including Ahimsa, Anekantvad, and Aparigraha",
+        articles: pathCategories["Principles"].slice(0, 10),
+        modules: [
+          "Introduction to Jain Principles",
+          "Who was Lord Mahavira",
+          "Main Principles of Jainism",
+          "Living with Others",
+          "The Soul and Liberation"
+        ]
+      });
+    }
+
+    if (pathCategories["Philosophy"].length > 0) {
+      paths.push({
+        id: pathId++,
+        title: "Jain Philosophy & Conduct",
+        progress: 60,
+        badges: 2,
+        totalBadges: 6,
+        level: "Intermediate",
+        description: "Deep dive into Jain philosophy, conduct (Charitra), and ethical principles",
+        articles: pathCategories["Philosophy"].slice(0, 15),
+        modules: [
+          "Conduct (Charitra)",
+          "Householder's Conduct (Shrawak Dharma)",
+          "Monkshood (Sadhu Dharma)",
+          "Spiritual Progress",
+          "God (Tirthankars)",
+          "Death and Life after Death"
+        ]
+      });
+    }
+
+    if (pathCategories["History"].length > 0) {
+      paths.push({
+        id: pathId++,
+        title: "Jain History & Tradition",
+        progress: 40,
+        badges: 1,
+        totalBadges: 4,
+        level: "Beginner",
+        description: "Explore the rich history and traditions of Jainism",
+        articles: pathCategories["History"].slice(0, 10),
+        modules: [
+          "Ancient Jain History",
+          "Tirthankaras and Their Times",
+          "Jain Traditions",
+          "Modern Jain Community"
+        ]
+      });
+    }
+
+    if (pathCategories["Practices"].length > 0) {
+      paths.push({
+        id: pathId++,
+        title: "Meditation & Daily Practices",
+        progress: 50,
+        badges: 2,
+        totalBadges: 7,
+        level: "Intermediate",
+        description: "Learn meditation techniques, daily rituals, and spiritual practices",
+        articles: pathCategories["Practices"].slice(0, 12),
+        modules: [
+          "Introduction to Meditation (Dhyan)",
+          "Fasting (Tapa)",
+          "Worship/Prayer (Pooja/Prarthna)",
+          "Pratikraman",
+          "Spiritual Death (Sanlekhana)",
+          "Yoga Practices",
+          "Daily Routines"
+        ]
+      });
+    }
+
+    if (pathCategories["Mantras"].length > 0) {
+      paths.push({
+        id: pathId++,
+        title: "Mantras & Prayers",
+        progress: 30,
+        badges: 1,
+        totalBadges: 4,
+        level: "Beginner",
+        description: "Master Jain mantras, prayers, and their meanings",
+        articles: pathCategories["Mantras"].slice(0, 8),
+        modules: [
+          "Namokar Mantra",
+          "Basic Prayers",
+          "Mantra Meanings",
+          "Prayer Practices"
+        ]
+      });
+    }
+
+    if (pathCategories["Scriptures"].length > 0) {
+      paths.push({
+        id: pathId++,
+        title: "Jain Scriptures & Sacred Texts",
+        progress: 20,
+        badges: 0,
+        totalBadges: 5,
+        level: "Advanced",
+        description: "Study Jain scriptures including Tattvarth Sutra and works of Acharya Kundkund",
+        articles: pathCategories["Scriptures"].slice(0, 10),
+        modules: [
+          "Tattvarth Sutra",
+          "Samayasar by Acharya Kundkund",
+          "Scripture Reading Techniques",
+          "Understanding Sacred Texts",
+          "Applying Scripture Teachings"
+        ]
+      });
+    }
+
+    // If no paths created, return defaults
+    if (paths.length === 0) {
+      return getDefaultLearningPaths();
+    }
+
+    return paths;
+  } catch (error) {
+    console.error("Error creating learning paths from data:", error);
+    return getDefaultLearningPaths();
+  }
+}
+
+function getDefaultLearningPaths() {
+  return [
+    {
+      id: 1,
+      title: "Jain Philosophy Basics",
+      progress: 80,
+      badges: 3,
+      totalBadges: 5,
+      level: "Beginner",
+      description: "Learn the fundamental principles of Jainism",
+    },
+    {
+      id: 2,
+      title: "Meditation & Practices",
+      progress: 60,
+      badges: 2,
+      totalBadges: 5,
+      level: "Intermediate",
+      description: "Discover meditation techniques and daily practices",
+    },
+    {
+      id: 3,
+      title: "Mantras & Prayers",
+      progress: 40,
+      badges: 1,
+      totalBadges: 5,
+      level: "Beginner",
+      description: "Master Jain mantras and prayers",
+    },
+    {
+      id: 4,
+      title: "Jain Ethics in Daily Life",
+      progress: 20,
+      badges: 0,
+      totalBadges: 5,
+      level: "Beginner",
+      description: "Apply Jain ethical principles to modern living",
+    },
+  ];
+}
 
 const mockQuizzes = [
   {
@@ -117,8 +309,9 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get("type");
 
   if (type === "paths") {
+    const paths = await getLearningPathsFromData();
     return NextResponse.json({
-      paths: mockLearningPaths,
+      paths,
     });
   }
 
