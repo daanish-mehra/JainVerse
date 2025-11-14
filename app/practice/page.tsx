@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Calendar, CheckCircle, Clock, Flame, TrendingUp, Target, Award } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,62 +10,128 @@ import Link from "next/link";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { FadeIn } from "@/components/animations/FadeIn";
 
-const todayPractices = [
-  {
-    id: 1,
-    icon: "🌅",
-    title: "Morning Prayer",
-    time: "6:30 AM",
-    status: "completed",
-    color: "green",
-  },
-  {
-    id: 2,
-    icon: "🧘",
-    title: "Meditation",
-    time: "7:00 AM - Reminder in 10 min",
-    status: "pending",
-    color: "saffron",
-  },
-  {
-    id: 3,
-    icon: "📖",
-    title: "Scripture Reading",
-    time: "8:00 AM",
-    status: "scheduled",
-    color: "blue",
-  },
-  {
-    id: 4,
-    icon: "🍽️",
-    title: "Fasting: Ekasan",
-    time: "Next meal: 6:00 PM",
-    status: "active",
-    color: "purple",
-  },
-];
+interface Practice {
+  id: number;
+  icon: string;
+  title: string;
+  time: string;
+  status: string;
+  description?: string;
+}
 
-const vratas = [
-  {
-    id: 1,
-    name: "Ekasan Vrata",
-    day: 3,
-    totalDays: 30,
-    progress: 10,
-  },
-];
+interface Vrata {
+  id: number;
+  name: string;
+  day: number;
+  totalDays: number;
+  progress: number;
+  description?: string;
+}
 
-const fastingSchedule = [
-  { day: "Mon", type: "Ekasan" },
-  { day: "Tue", type: "Biasan" },
-  { day: "Wed", type: "Chauvihar" },
-  { day: "Thu", type: "Ekasan" },
-  { day: "Fri", type: "Biasan" },
-  { day: "Sat", type: "Chauvihar" },
-  { day: "Sun", type: "Ekasan" },
-];
+interface FastingDay {
+  day: string;
+  type: string;
+}
+
+interface Progress {
+  streak: number;
+  totalPractices: number;
+  vratasCompleted: number;
+  thisMonth: number;
+}
 
 export default function PracticePage() {
+  const [practices, setPractices] = useState<Practice[]>([]);
+  const [vratas, setVratas] = useState<Vrata[]>([]);
+  const [fastingSchedule, setFastingSchedule] = useState<FastingDay[]>([]);
+  const [progress, setProgress] = useState<Progress>({ streak: 7, totalPractices: 120, vratasCompleted: 5, thisMonth: 20 });
+  const [reflection, setReflection] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [practicesRes, vratasRes, fastingRes, progressRes] = await Promise.all([
+        fetch('/api/practice?type=practices'),
+        fetch('/api/practice?type=vratas'),
+        fetch('/api/practice?type=fasting'),
+        fetch('/api/practice?type=progress'),
+      ]);
+
+      const practicesData = await practicesRes.json();
+      const vratasData = await vratasRes.json();
+      const fastingData = await fastingRes.json();
+      const progressData = await progressRes.json();
+
+      setPractices(practicesData.practices || []);
+      setVratas(vratasData.vratas || []);
+      setFastingSchedule(fastingData.schedule || []);
+      setProgress(progressData);
+    } catch (error) {
+      console.error('Error fetching practice data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCompletePractice = async (practiceId: number) => {
+    try {
+      const response = await fetch('/api/practice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'complete-practice',
+          practiceId,
+          completed: true,
+        }),
+      });
+
+      if (response.ok) {
+        setPractices((prev) =>
+          prev.map((p) => (p.id === practiceId ? { ...p, status: 'completed' } : p))
+        );
+        fetch('/api/practice?type=progress').then(r => r.json()).then(data => setProgress(data));
+      }
+    } catch (error) {
+      console.error('Error completing practice:', error);
+    }
+  };
+
+  const handleSaveReflection = async () => {
+    if (!reflection.trim()) return;
+
+    try {
+      const response = await fetch('/api/practice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'add-reflection',
+          reflection,
+        }),
+      });
+
+      if (response.ok) {
+        setReflection("");
+        alert("Reflection saved successfully!");
+      }
+    } catch (error) {
+      console.error('Error saving reflection:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-saffron-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your practices...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen pb-20 bg-gradient-to-b from-white via-ivory-50 to-white">
       <motion.div
@@ -102,7 +169,7 @@ export default function PracticePage() {
               Your spiritual routine for today
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {todayPractices.map((practice, index) => (
+              {practices.map((practice, index) => (
                 <ScrollReveal key={practice.id} direction="up" delay={index * 0.1}>
                   <motion.div
                     whileHover={{ scale: 1.02, y: -4 }}
@@ -127,20 +194,34 @@ export default function PracticePage() {
                         <div>
                           <h3 className="font-bold text-lg text-gray-900">{practice.title}</h3>
                           <p className="text-sm text-gray-600 mt-1">{practice.time}</p>
+                          {practice.description && (
+                            <p className="text-xs text-gray-500 mt-1">{practice.description}</p>
+                          )}
                         </div>
                       </div>
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        whileInView={{ scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: index * 0.15, type: "spring", stiffness: 300 }}
-                        className="text-3xl"
-                      >
-                        {practice.status === "completed" && "✅"}
-                        {practice.status === "pending" && "⏰"}
-                        {practice.status === "active" && "🔒"}
-                        {practice.status === "scheduled" && "📅"}
-                      </motion.div>
+                      <div className="flex items-center space-x-2">
+                        {practice.status !== "completed" && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleCompletePractice(practice.id)}
+                            className="text-xs px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded-lg"
+                          >
+                            ✓
+                          </Button>
+                        )}
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          whileInView={{ scale: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: index * 0.15, type: "spring", stiffness: 300 }}
+                          className="text-3xl"
+                        >
+                          {practice.status === "completed" && "✅"}
+                          {practice.status === "pending" && "⏰"}
+                          {practice.status === "active" && "🔒"}
+                          {practice.status === "scheduled" && "📅"}
+                        </motion.div>
+                      </div>
                     </div>
                   </motion.div>
                 </ScrollReveal>
@@ -178,6 +259,7 @@ export default function PracticePage() {
                         Day: {vrata.day}/{vrata.totalDays}
                       </span>
                     </div>
+                    <p className="text-sm text-gray-600 mb-3">{vrata.description}</p>
                     <div>
                       <div className="flex justify-between text-sm mb-3">
                         <span className="font-medium text-gray-700">Progress</span>
@@ -248,10 +330,15 @@ export default function PracticePage() {
                   How did you practice Ahimsa today?
                 </p>
                 <textarea
+                  value={reflection}
+                  onChange={(e) => setReflection(e.target.value)}
                   className="w-full min-h-[120px] p-4 rounded-xl border-2 border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none transition-all bg-white/80 backdrop-blur-sm"
                   placeholder="Write your reflection here..."
                 />
-                <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-xl hover:scale-105 transition-all rounded-xl">
+                <Button 
+                  onClick={handleSaveReflection}
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-xl hover:scale-105 transition-all rounded-xl"
+                >
                   Save Reflection
                 </Button>
               </CardContent>
@@ -266,9 +353,9 @@ export default function PracticePage() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { icon: Flame, label: "Streak", value: "7 days", color: "saffron", bg: "from-saffron-50 to-orange-50", border: "border-saffron-200" },
-                { icon: TrendingUp, label: "This Month", value: "20 practices", color: "jainGreen", bg: "from-jainGreen-50 to-teal-50", border: "border-jainGreen-200" },
-                { icon: Award, label: "Achievements", value: "5 badges", color: "gold", bg: "from-gold-50 to-yellow-50", border: "border-gold-200" },
+                { icon: Flame, label: "Streak", value: `${progress.streak} days`, color: "saffron", bg: "from-saffron-50 to-orange-50", border: "border-saffron-200" },
+                { icon: TrendingUp, label: "This Month", value: `${progress.thisMonth} practices`, color: "jainGreen", bg: "from-jainGreen-50 to-teal-50", border: "border-jainGreen-200" },
+                { icon: Award, label: "Vratas Completed", value: `${progress.vratasCompleted}`, color: "gold", bg: "from-gold-50 to-yellow-50", border: "border-gold-200" },
               ].map((stat, index) => {
                 const Icon = stat.icon;
                 return (
