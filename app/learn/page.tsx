@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { FadeIn } from "@/components/animations/FadeIn";
+import Link from "next/link";
 
 interface LearningPath {
   id: number;
