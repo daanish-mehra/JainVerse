@@ -59,8 +59,8 @@ async function getLearningPathsFromData() {
       paths.push({
         id: pathId++,
         title: "Jain Principles & Fundamentals",
-        progress: 80,
-        badges: 3,
+        progress: 0,
+        badges: 0,
         totalBadges: 5,
         level: "Beginner",
         description: "Learn the core principles of Jainism including Ahimsa, Anekantvad, and Aparigraha",
@@ -79,8 +79,8 @@ async function getLearningPathsFromData() {
       paths.push({
         id: pathId++,
         title: "Jain Philosophy & Conduct",
-        progress: 60,
-        badges: 2,
+        progress: 0,
+        badges: 0,
         totalBadges: 6,
         level: "Intermediate",
         description: "Deep dive into Jain philosophy, conduct (Charitra), and ethical principles",
@@ -100,8 +100,8 @@ async function getLearningPathsFromData() {
       paths.push({
         id: pathId++,
         title: "Meditation & Daily Practices",
-        progress: 50,
-        badges: 2,
+        progress: 0,
+        badges: 0,
         totalBadges: 7,
         level: "Intermediate",
         description: "Learn meditation techniques, daily rituals, and spiritual practices",

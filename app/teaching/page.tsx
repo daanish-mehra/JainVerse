@@ -11,19 +11,19 @@ const lessons = [
   {
     id: 1,
     title: "Lesson 1: Jain Philosophy",
-    progress: 80,
+    progress: 0,
     level: "Beginner",
   },
   {
     id: 2,
     title: "Lesson 2: Meditation",
-    progress: 60,
+    progress: 0,
     level: "Intermediate",
   },
   {
     id: 3,
     title: "Lesson 3: Practices",
-    progress: 40,
+    progress: 0,
     level: "Intermediate",
   },
 ];

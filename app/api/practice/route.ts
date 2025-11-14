@@ -45,7 +45,7 @@ const mockVratas = [
     name: "Ekasan Vrata",
     day: 3,
     totalDays: 30,
-    progress: 10,
+    progress: 0,
     description: "A vow to eat only one meal a day.",
   },
   {
@@ -53,7 +53,7 @@ const mockVratas = [
     name: "Chauvihar Vrata",
     day: 15,
     totalDays: 30,
-    progress: 50,
+    progress: 0,
     description: "A vow to abstain from food and water after sunset.",
   },
 ];

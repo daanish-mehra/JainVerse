@@ -63,10 +63,10 @@ export default function HomePage() {
   const [currentTime, setCurrentTime] = useState<string>("");
   const [greeting, setGreeting] = useState<string>("");
   const [practices, setPractices] = useState([
-    { icon: "🌅", title: "Morning Prayer", time: "6:30 AM", status: "completed" },
+    { icon: "🌅", title: "Morning Prayer", time: "6:30 AM", status: "pending" },
     { icon: "🧘", title: "Meditation", time: "7:00 AM", status: "pending" },
-    { icon: "📖", title: "Scripture Reading", time: "8:00 AM", status: "scheduled" },
-    { icon: "🍽️", title: "Fasting: Ekasan", time: "Today", status: "active" },
+    { icon: "📖", title: "Scripture Reading", time: "8:00 AM", status: "pending" },
+    { icon: "🍽️", title: "Fasting: Ekasan", time: "Today", status: "pending" },
   ]);
 
   useEffect(() => {
@@ -119,8 +119,8 @@ export default function HomePage() {
   const completedPractices = practices.filter(p => p.status === "completed").length;
   const totalPractices = practices.length;
   const practicesProgress = totalPractices > 0 ? Math.round((completedPractices / totalPractices) * 100) : 0;
-  const learningProgress = 70;
-  const streak = 7;
+  const learningProgress = 0;
+  const streak = 0;
   
   return (
     <div className="min-h-screen pb-20 bg-gradient-to-b from-white via-ivory-50 to-white">

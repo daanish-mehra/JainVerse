@@ -9,7 +9,7 @@ const stats = {
   streak: 7,
   lessons: 12,
   totalLessons: 20,
-  badges: 5,
+  badges: 0,
   chats: 45,
 };
 
@@ -45,7 +45,7 @@ export default function ProfilePage() {
                 👤
               </div>
               <h2 className="text-2xl font-bold text-white mb-1">Daanish</h2>
-              <p className="text-white/90 text-sm">Level 5 Learner</p>
+              <p className="text-white/90 text-sm">Level 1 Learner</p>
               <div className="mt-4 flex items-center justify-center space-x-2">
                 <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
                   <span className="text-white text-sm font-semibold">🔥 {stats.streak} day streak</span>

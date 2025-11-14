@@ -45,7 +45,7 @@ export default function PracticePage() {
   const [practices, setPractices] = useState<Practice[]>([]);
   const [vratas, setVratas] = useState<Vrata[]>([]);
   const [fastingSchedule, setFastingSchedule] = useState<FastingDay[]>([]);
-  const [progress, setProgress] = useState<Progress>({ streak: 7, totalPractices: 120, vratasCompleted: 5, thisMonth: 20 });
+  const [progress, setProgress] = useState<Progress>({ streak: 0, totalPractices: 0, vratasCompleted: 0, thisMonth: 0 });
   const [reflection, setReflection] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -86,7 +86,7 @@ export default function PracticePage() {
         body: JSON.stringify({
           action: 'complete-practice',
           practiceId,
-          completed: true,
+          completed: false,
         }),
       });
 

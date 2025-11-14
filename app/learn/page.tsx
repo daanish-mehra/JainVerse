@@ -52,7 +52,7 @@ export default function LearnPage() {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
-  const [punyaPoints, setPunyaPoints] = useState(250);
+  const [punyaPoints, setPunyaPoints] = useState(0);
   const [selectedQuiz, setSelectedQuiz] = useState<number | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [quizResult, setQuizResult] = useState<boolean | null>(null);
@@ -82,7 +82,7 @@ export default function LearnPage() {
       setQuizzes(quizzesData.quizzes || []);
       setStories(storiesData.stories || []);
       setAchievements(achievementsData.achievements || []);
-      setPunyaPoints(progressData.punyaPoints || 250);
+      setPunyaPoints(progressData.punyaPoints || 0);
     } catch (error) {
       console.error('Error fetching learn data:', error);
     } finally {
@@ -166,7 +166,7 @@ export default function LearnPage() {
           transition={{ delay: 0.3 }}
           className="text-gray-600 text-sm"
         >
-          Level 5 Learner • Continue your journey
+          Level 1 Learner • Start your journey
         </motion.p>
       </motion.div>
 

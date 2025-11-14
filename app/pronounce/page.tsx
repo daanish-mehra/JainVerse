@@ -12,19 +12,19 @@ const lessons = [
   {
     id: 1,
     title: "Lesson 1: Basic Sounds",
-    progress: 80,
+    progress: 0,
     level: "Beginner",
   },
   {
     id: 2,
     title: "Lesson 2: Common Words",
-    progress: 60,
+    progress: 0,
     level: "Beginner",
   },
   {
     id: 3,
     title: "Lesson 3: Sutras",
-    progress: 40,
+    progress: 0,
     level: "Intermediate",
   },
 ];

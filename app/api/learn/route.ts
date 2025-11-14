@@ -62,8 +62,8 @@ async function getLearningPathsFromData() {
       paths.push({
         id: pathId++,
         title: "Jain Principles & Fundamentals",
-        progress: 80,
-        badges: 3,
+        progress: 0,
+        badges: 0,
         totalBadges: 5,
         level: "Beginner",
         description: "Learn the core principles of Jainism including Ahimsa, Anekantvad, and Aparigraha",
@@ -83,8 +83,8 @@ async function getLearningPathsFromData() {
       paths.push({
         id: pathId++,
         title: "Jain Philosophy & Conduct",
-        progress: 60,
-        badges: 2,
+        progress: 0,
+        badges: 0,
         totalBadges: 6,
         level: "Intermediate",
         description: "Deep dive into Jain philosophy, conduct (Charitra), and ethical principles",
@@ -104,8 +104,8 @@ async function getLearningPathsFromData() {
       paths.push({
         id: pathId++,
         title: "Jain History & Tradition",
-        progress: 40,
-        badges: 1,
+        progress: 0,
+        badges: 0,
         totalBadges: 4,
         level: "Beginner",
         description: "Explore the rich history and traditions of Jainism",
@@ -123,8 +123,8 @@ async function getLearningPathsFromData() {
       paths.push({
         id: pathId++,
         title: "Meditation & Daily Practices",
-        progress: 50,
-        badges: 2,
+        progress: 0,
+        badges: 0,
         totalBadges: 7,
         level: "Intermediate",
         description: "Learn meditation techniques, daily rituals, and spiritual practices",
@@ -145,8 +145,8 @@ async function getLearningPathsFromData() {
       paths.push({
         id: pathId++,
         title: "Mantras & Prayers",
-        progress: 30,
-        badges: 1,
+        progress: 0,
+        badges: 0,
         totalBadges: 4,
         level: "Beginner",
         description: "Master Jain mantras, prayers, and their meanings",
@@ -164,7 +164,7 @@ async function getLearningPathsFromData() {
       paths.push({
         id: pathId++,
         title: "Jain Scriptures & Sacred Texts",
-        progress: 20,
+        progress: 0,
         badges: 0,
         totalBadges: 5,
         level: "Advanced",
@@ -444,7 +444,7 @@ export async function GET(request: NextRequest) {
       }
       
       const allAchievements = [
-        { id: 1, title: "First Steps", icon: "🌱", description: "Complete your first quiz", earned: (progressData.totalQuizzesCompleted || 0) > 0 },
+        { id: 1, title: "First Steps", icon: "🌱", description: "Complete your first quiz", earned: false },
         { id: 2, title: "Quiz Master", icon: "🥇", description: "Complete 10 quizzes", earned: (progressData.totalQuizzesCompleted || 0) >= 10 },
         { id: 3, title: "Story Lover", icon: "📚", description: "Read 5 stories", earned: (progressData.totalStoriesRead || 0) >= 5 },
         { id: 4, title: "Path Finder", icon: "🛤️", description: "Complete a learning path", earned: (progressData.learningPathsCompleted || 0) > 0 },

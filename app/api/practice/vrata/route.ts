@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
       name: "Ekasan Vrata",
       day: 3,
       totalDays: 30,
-      progress: 10,
+      progress: 0,
       startDate: new Date().toISOString(),
       endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     },
