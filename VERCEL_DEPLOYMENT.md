@@ -92,7 +92,13 @@ The `vercel.json` file is already configured with:
 
 ---
 
-## 📊 Database Setup (Supabase - Recommended)
+## 📊 Database Setup (Azure Cosmos DB - Recommended for Microsoft)
+
+**For Microsoft Presentation**: Use **Azure Cosmos DB** instead of Supabase!
+
+See [DATABASE_RECOMMENDATION.md](./DATABASE_RECOMMENDATION.md) for detailed Azure setup.
+
+### Quick Setup: Azure Cosmos DB
 
 ### Step 1: Create Supabase Project
 

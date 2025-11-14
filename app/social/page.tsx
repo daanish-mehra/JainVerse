@@ -46,8 +46,7 @@ export default function SocialPage() {
   const [selectedStyle, setSelectedStyle] = useState("educational");
 
   const handleGenerateContent = () => {
-    
-    console.log("Generating content...", { selectedTopic, selectedPlatform, selectedStyle });
+    // TODO: Implement social media content generation with Azure OpenAI
   };
 
   return (

@@ -54,7 +54,7 @@ export default function PronouncePage() {
 
   const handleTranslate = () => {
     
-    console.log("Translating...", { sourceLanguage, targetLanguage });
+    // TODO: Implement translation with Azure Translator
   };
 
   return (

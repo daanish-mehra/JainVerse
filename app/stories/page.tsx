@@ -46,8 +46,7 @@ export default function StoriesPage() {
   const [selectedStyle, setSelectedStyle] = useState("friendly");
 
   const handleGenerateStory = () => {
-    
-    console.log("Generating story...", { selectedAgeGroup, selectedTheme, selectedStyle });
+    // TODO: Implement story generation with Azure OpenAI
   };
 
   return (
@@ -63,7 +62,6 @@ export default function StoriesPage() {
       </div>
 
       <div className="px-6 py-6 space-y-6">
-        {}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
