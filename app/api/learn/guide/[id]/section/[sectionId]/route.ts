@@ -141,10 +141,14 @@ export async function GET(
 
     const combinedContent = sectionArticles
       .map((article: any) => {
-        const cleaned = cleanArticleContent(article.content || "");
-        return `**${article.title || "Article"}**\n\n${cleaned}`;
+        let cleaned = cleanArticleContent(article.content || "");
+        if (!cleaned || cleaned.length < 50) {
+          cleaned = article.content || "";
+        }
+        return cleaned;
       })
-      .join("\n\n---\n\n");
+      .filter((content: string) => content.length > 50)
+      .join("\n\n");
 
     let summary = "";
     let quiz = null;

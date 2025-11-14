@@ -42,12 +42,12 @@ export default function CoursePage() {
 
   const fetchCourse = async () => {
     try {
-      const response = await fetch(`/api/learn/course/${courseId}`);
-      if (!response.ok) throw new Error("Failed to fetch course");
+      const response = await fetch(`/api/learn/guide/${courseId}`);
+      if (!response.ok) throw new Error("Failed to fetch guide");
       const data = await response.json();
       setCourse(data);
     } catch (error) {
-      console.error("Error fetching course:", error);
+      console.error("Error fetching guide:", error);
     } finally {
       setLoading(false);
     }
