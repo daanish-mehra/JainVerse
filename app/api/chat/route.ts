@@ -89,8 +89,15 @@ ${context ? `\nRelevant context from Jain scriptures and teachings:\n${context}\
 }
 
 export async function POST(req: NextRequest) {
+  let message: string | undefined;
+  let language = "EN";
+  let mode = "beginner";
+  
   try {
-    const { message, language = "EN", mode = "beginner" } = await req.json();
+    const body = await req.json();
+    message = body.message;
+    language = body.language || "EN";
+    mode = body.mode || "beginner";
     
     if (!message || typeof message !== 'string') {
       return NextResponse.json(
