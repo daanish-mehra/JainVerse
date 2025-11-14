@@ -80,19 +80,23 @@ export default function PracticePage() {
 
   const handleCompletePractice = async (practiceId: number) => {
     try {
+      const practice = practices.find(p => p.id === practiceId);
+      const isCurrentlyCompleted = practice?.status === 'completed';
+      const newStatus = isCurrentlyCompleted ? 'pending' : 'completed';
+
       const response = await fetch('/api/practice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'complete-practice',
           practiceId,
-          completed: false,
+          completed: !isCurrentlyCompleted,
         }),
       });
 
       if (response.ok) {
         setPractices((prev) =>
-          prev.map((p) => (p.id === practiceId ? { ...p, status: 'completed' } : p))
+          prev.map((p) => (p.id === practiceId ? { ...p, status: newStatus } : p))
         );
         fetch('/api/practice?type=progress').then(r => r.json()).then(data => setProgress(data));
       }
@@ -207,18 +211,21 @@ export default function PracticePage() {
                           )}
                         </div>
                       </div>
-                      <motion.div
+                      <motion.button
+                        onClick={() => handleCompletePractice(practice.id)}
                         initial={{ scale: 0 }}
                         whileInView={{ scale: 1 }}
                         viewport={{ once: true }}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                         transition={{ delay: index * 0.15, type: "spring", stiffness: 300 }}
-                        className="text-3xl"
+                        className="text-3xl cursor-pointer focus:outline-none"
                       >
                         {practice.status === "completed" && "✅"}
                         {practice.status === "pending" && "⏰"}
                         {practice.status === "active" && "🔒"}
                         {practice.status === "scheduled" && "📅"}
-                      </motion.div>
+                      </motion.button>
                     </div>
                   </motion.div>
                 </ScrollReveal>
