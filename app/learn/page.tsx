@@ -177,7 +177,7 @@ export default function LearnPage() {
               Learning Paths
             </h2>
             <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
-              Structured courses from beginner to advanced
+              Daily guides for learning and practicing Jain principles
             </p>
             <div className="space-y-6">
               {learningPaths.map((path, index) => (
@@ -215,7 +215,7 @@ export default function LearnPage() {
                             />
                           </div>
                         </div>
-                        <Link href={`/learn/course/${path.id}`} className="block">
+                        <Link href={`/learn/guide/${path.id}`} className="block">
                           <Button className="w-full bg-gradient-to-r from-saffron-500 to-gold-500 hover:shadow-xl hover:scale-105 transition-all">
                             Continue Learning
                           </Button>

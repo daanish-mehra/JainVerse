@@ -54,7 +54,7 @@ export default function CoursePage() {
   };
 
   const handleModuleClick = (module: Module) => {
-    router.push(`/learn/course/${courseId}/module/${module.id}`);
+    router.push(`/learn/guide/${courseId}/section/${module.id}`);
   };
 
   const getNextIncompleteModule = () => {
@@ -67,7 +67,7 @@ export default function CoursePage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-saffron-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading course...</p>
+          <p className="text-gray-600">Loading guide...</p>
         </div>
       </div>
     );
@@ -77,7 +77,7 @@ export default function CoursePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Course not found</p>
+                  <p className="text-gray-600 mb-4">Guide not found</p>
           <Link href="/learn">
             <Button>Back to Learn</Button>
           </Link>
@@ -100,7 +100,6 @@ export default function CoursePage() {
           </Link>
           <div className="flex-1">
             <h1 className="text-xl font-bold text-gray-900">{course.title}</h1>
-            <p className="text-xs text-gray-600">{course.level}</p>
           </div>
         </div>
       </div>
@@ -109,23 +108,18 @@ export default function CoursePage() {
         <ScrollReveal direction="up" delay={0}>
           <Card className="bg-gradient-to-br from-saffron-50 to-gold-50 border-2 border-saffron-200">
             <CardHeader>
-              <div className="flex items-center justify-between mb-2">
-                <CardTitle className="text-2xl font-bold text-gray-900">
-                  {course.title}
-                </CardTitle>
-                <span className="text-xs bg-saffron-100 text-saffron-700 px-3 py-1 rounded-full font-medium">
-                  {course.level}
-                </span>
-              </div>
+              <CardTitle className="text-2xl font-bold text-gray-900">
+                {course.title}
+              </CardTitle>
               <CardDescription className="text-base text-gray-700">
-                {course.description}
+                Daily guide for learning and practicing Jain principles
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="font-medium text-gray-700">Course Progress</span>
+                    <span className="font-medium text-gray-700">Guide Progress</span>
                     <span className="font-bold text-saffron-600">{course.progress}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
@@ -137,7 +131,7 @@ export default function CoursePage() {
                     />
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    {course.completedModules.length} of {course.modules.length} modules completed
+                    {course.completedModules.length} of {course.modules.length} sections completed
                   </p>
                 </div>
                 {nextModule && (
@@ -156,7 +150,7 @@ export default function CoursePage() {
 
         <ScrollReveal direction="up" delay={0.1}>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Course Modules</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Sections</h2>
             <div className="space-y-4">
               {course.modules.map((module, index) => (
                 <ScrollReveal key={module.id} direction="up" delay={index * 0.1}>
@@ -193,7 +187,7 @@ export default function CoursePage() {
                                 {module.id + 1}. {module.title}
                               </h3>
                               <p className="text-sm text-gray-600">
-                                {module.progress} of {module.totalArticles} articles completed
+                                {module.completed ? "Completed" : "Ready to learn"}
                               </p>
                             </div>
                           </div>
