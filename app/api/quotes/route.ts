@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getRandomQuote } from '@/lib/cosmos';
 
-const jainQuotes = [
+const fallbackQuotes = [
   {
     quote: "Ahimsa is the highest virtue",
     author: "Mahavira",
@@ -55,7 +56,24 @@ const jainQuotes = [
 
 export async function GET(request: NextRequest) {
   try {
-    const randomQuote = jainQuotes[Math.floor(Math.random() * jainQuotes.length)];
+    let quote = null;
+    
+    try {
+      quote = await getRandomQuote();
+    } catch (error) {
+      console.warn('Cosmos DB not available, using fallback quotes:', error instanceof Error ? error.message : 'Unknown error');
+    }
+    
+    if (quote) {
+      return NextResponse.json({
+        success: true,
+        quote: quote.quote,
+        author: quote.author || 'Jain Wisdom',
+        explanation: quote.source || 'From Jain scriptures and teachings',
+      });
+    }
+    
+    const randomQuote = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
     
     return NextResponse.json({
       success: true,
@@ -65,10 +83,15 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Quotes API error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch quote' },
-      { status: 500 }
-    );
+    
+    const randomQuote = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
+    
+    return NextResponse.json({
+      success: true,
+      quote: randomQuote.quote,
+      author: randomQuote.author,
+      explanation: randomQuote.explanation,
+    });
   }
 }
 

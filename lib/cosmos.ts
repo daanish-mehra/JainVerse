@@ -1,24 +1,35 @@
 import { CosmosClient, Database, Container } from '@azure/cosmos';
 
-if (!process.env.AZURE_COSMOS_ENDPOINT || !process.env.AZURE_COSMOS_KEY) {
-  throw new Error('Azure Cosmos DB credentials not configured');
+function getClient(): CosmosClient | null {
+  const endpoint = process.env.AZURE_COSMOS_ENDPOINT;
+  const key = process.env.AZURE_COSMOS_KEY;
+  
+  if (!endpoint || !key) {
+    return null;
+  }
+  
+  return new CosmosClient({ endpoint, key });
 }
 
-const client = new CosmosClient({
-  endpoint: process.env.AZURE_COSMOS_ENDPOINT,
-  key: process.env.AZURE_COSMOS_KEY,
-});
-
+const client = getClient();
 const databaseId = process.env.AZURE_COSMOS_DATABASE || 'jainai';
 
 export async function getDatabase(): Promise<Database> {
+  if (!client) {
+    throw new Error('Azure Cosmos DB credentials not configured');
+  }
+  
   const { database } = await client.databases.createIfNotExists({ id: databaseId });
   return database;
 }
 
 export async function getContainer(containerId: string): Promise<Container> {
+  if (!client) {
+    throw new Error('Azure Cosmos DB credentials not configured');
+  }
+  
   const database = await getDatabase();
-  const { container } = await database.containers.createIfNotExists({ id: containerId });
+  const container = database.container(containerId);
   return container;
 }
 
@@ -42,18 +53,23 @@ export interface Article {
 }
 
 export async function getRandomQuote(): Promise<Quote | null> {
-  const container = await getContainer('quotes');
-  
-  const querySpec = {
-    query: 'SELECT * FROM c',
-  };
-  
-  const { resources } = await container.items.query(querySpec).fetchAll();
-  
-  if (resources.length === 0) return null;
-  
-  const randomIndex = Math.floor(Math.random() * resources.length);
-  return resources[randomIndex] as Quote;
+  try {
+    const container = await getContainer('quotes');
+    
+    const querySpec = {
+      query: 'SELECT * FROM c',
+    };
+    
+    const { resources } = await container.items.query(querySpec).fetchAll();
+    
+    if (resources.length === 0) return null;
+    
+    const randomIndex = Math.floor(Math.random() * resources.length);
+    return resources[randomIndex] as Quote;
+  } catch (error) {
+    console.warn('Failed to fetch quote from Cosmos DB:', error instanceof Error ? error.message : 'Unknown error');
+    return null;
+  }
 }
 
 export async function getAllQuotes(): Promise<Quote[]> {
@@ -80,4 +96,7 @@ export async function getArticles(limit: number = 10): Promise<Article[]> {
 }
 
 export { client };
+export function isCosmosConfigured(): boolean {
+  return client !== null;
+}
 
