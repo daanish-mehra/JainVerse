@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Trophy, BookOpen, Brain, Target, CheckCircle, XCircle, Sparkles, ChevronLeft, ChevronRight, Play, Pause } from "lucide-react";
+import { Trophy, BookOpen, Brain, Target, CheckCircle, XCircle, Sparkles, ChevronLeft, ChevronRight, Play, Pause, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { FadeIn } from "@/components/animations/FadeIn";
@@ -64,6 +65,13 @@ export default function LearnPage() {
   const [narratingStoryId, setNarratingStoryId] = useState<number | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
+  const [isStoryDialogOpen, setIsStoryDialogOpen] = useState(false);
+  const [storyContent, setStoryContent] = useState<string>("");
+  const [loadingStory, setLoadingStory] = useState(false);
+  const [moralDilemma, setMoralDilemma] = useState<any>(null);
+  const [loadingDilemma, setLoadingDilemma] = useState(false);
+  const [selectedDilemmaOption, setSelectedDilemmaOption] = useState<number | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -194,12 +202,35 @@ export default function LearnPage() {
     setTouchEnd(0);
   };
 
+  const handleReadStory = async (story: Story) => {
+    setSelectedStory(story);
+    setIsStoryDialogOpen(true);
+    
+    // If story already has content, use it
+    if (story.content && story.content.trim().length > 0) {
+      setStoryContent(story.content);
+      return;
+    }
+    
+    // If story has description, use it as fallback
+    if (story.description && story.description.trim().length > 0) {
+      setStoryContent(story.description);
+      return;
+    }
+    
+    // Otherwise show a placeholder message
+    setStoryContent(`This story is about ${story.title}. The full content will be available soon.`);
+  };
+
   const handleNarrateStory = async (story: Story) => {
     if (narratingStoryId === story.id && audioUrl) {
       // Toggle pause/play
       if (audioRef.current) {
         if (audioRef.current.paused) {
-          audioRef.current.play();
+          audioRef.current.play().catch((err) => {
+            console.error('Error resuming audio:', err);
+            alert('Failed to play audio. Please check your browser settings.');
+          });
         } else {
           audioRef.current.pause();
         }
@@ -207,49 +238,182 @@ export default function LearnPage() {
       return;
     }
 
-    if (!story.content) {
-      alert('Story content not available for narration');
-      return;
+    // Stop any currently playing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
     }
 
+    // Use story content, description, or title for narration
+    const textToNarrate = story.content || story.description || story.title || 'This story is not available for narration.';
+    
     setNarratingStoryId(story.id);
+    setAudioUrl(null);
     
     try {
+      console.log('Fetching narration for story:', story.id);
+      
+      // Create AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+      
       const response = await fetch('/api/stories/narrate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: story.content,
+          text: textToNarrate.substring(0, 2000), // Limit to 2000 chars for faster generation
           storyId: story.id,
         }),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
 
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', { success: data.success, hasAudio: !!data.audio, audioLength: data.audio?.length });
+
+      if (!response.ok) {
+        const errorMsg = data.error || data.message || `Server returned ${response.status}`;
+        alert(errorMsg);
+        throw new Error(errorMsg);
+      }
+
       if (data.success && data.audio) {
+        console.log('Setting audio URL, length:', data.audio.length);
         setAudioUrl(data.audio);
         
-        // Play audio
+        // Create and configure audio
         const audio = new Audio(data.audio);
         audioRef.current = audio;
-        audio.play();
+        
+        // Set volume and preload
+        audio.volume = 1.0;
+        audio.preload = 'auto';
+        
+        // Set up event handlers
+        audio.onloadedmetadata = () => {
+          console.log('Audio metadata loaded, duration:', audio.duration);
+        };
+        
+        audio.oncanplaythrough = () => {
+          console.log('Audio can play through');
+        };
+        
+        audio.onplay = () => {
+          console.log('Audio started playing');
+        };
+        
+        audio.onpause = () => {
+          console.log('Audio paused');
+        };
         
         audio.onended = () => {
+          console.log('Audio playback ended');
           setNarratingStoryId(null);
           setAudioUrl(null);
+          if (audioRef.current) {
+            audioRef.current = null;
+          }
         };
         
-        audio.onerror = () => {
+        audio.onerror = (error) => {
+          console.error('Audio playback error:', error);
+          console.error('Audio error details:', {
+            error: error,
+            networkState: audio.networkState,
+            readyState: audio.readyState,
+            src: audio.src.substring(0, 100),
+            duration: audio.duration,
+            volume: audio.volume
+          });
           setNarratingStoryId(null);
           setAudioUrl(null);
-          alert('Failed to play narration');
+          if (audioRef.current) {
+            audioRef.current = null;
+          }
+          alert('Failed to play narration. The audio file may be corrupted. Please check the browser console for details.');
         };
+
+        // Wait for audio to be ready, then play
+        const playAudio = () => {
+          if (audio.readyState >= 2) { // HAVE_CURRENT_DATA or higher
+            console.log('Audio ready, attempting to play...');
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+              playPromise
+                .then(() => {
+                  console.log('Audio play promise resolved - should be playing now');
+                })
+                .catch((playError) => {
+                  console.error('Error playing audio:', playError);
+                  console.error('Error name:', playError.name);
+                  console.error('Error message:', playError.message);
+                  setNarratingStoryId(null);
+                  setAudioUrl(null);
+                  if (audioRef.current) {
+                    audioRef.current = null;
+                  }
+                  
+                  let errorMsg = 'Failed to play narration. ';
+                  if (playError.name === 'NotAllowedError') {
+                    errorMsg += 'Your browser blocked autoplay. Please check your browser settings and ensure audio is not muted.';
+                  } else if (playError.name === 'NotSupportedError') {
+                    errorMsg += 'Your browser does not support this audio format.';
+                  } else {
+                    errorMsg += `Error: ${playError.message}. Please check your browser audio settings.`;
+                  }
+                  alert(errorMsg);
+                });
+            }
+          } else {
+            console.log('Audio not ready yet, waiting... readyState:', audio.readyState);
+            audio.addEventListener('canplay', () => {
+              console.log('Audio can play now, attempting to play...');
+              playAudio();
+            }, { once: true });
+            
+            // Fallback: try to play after a short delay
+            setTimeout(() => {
+              if (audio.readyState >= 2) {
+                playAudio();
+              }
+            }, 500);
+          }
+        };
+
+        // Start loading and attempt to play
+        try {
+          audio.load();
+          playAudio();
+        } catch (error) {
+          console.error('Exception trying to play audio:', error);
+          setNarratingStoryId(null);
+          setAudioUrl(null);
+          if (audioRef.current) {
+            audioRef.current = null;
+          }
+          alert('Failed to play narration. Please try again.');
+        }
       } else {
-        throw new Error(data.error || 'Failed to generate narration');
+        throw new Error(data.error || data.message || 'Failed to generate narration - no audio received');
       }
     } catch (error) {
       console.error('Error narrating story:', error);
       setNarratingStoryId(null);
-      alert('Failed to generate narration. Please try again.');
+      setAudioUrl(null);
+      
+      let errorMessage = 'Failed to generate narration. ';
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage += 'Request timed out. The narration is taking too long. Please try again or try a shorter story.';
+        } else {
+          errorMessage += error.message;
+        }
+      } else {
+        errorMessage += 'Please check your ElevenLabs API key configuration.';
+      }
+      alert(errorMessage);
     }
   };
 
@@ -517,13 +681,18 @@ export default function LearnPage() {
                             <h3 className="font-bold text-xl text-gray-900 mb-3">📖 {story.title}</h3>
                             <div className="flex flex-wrap gap-2 text-sm text-gray-600">
                               <span>🎯 Age: {story.age}</span>
-                              <span>⭐ {story.rating}/5</span>
+                              <span>⭐ {story.rating.toFixed(2)}/5</span>
                               <span>📚 {story.pages} pages</span>
                             </div>
                           </div>
                         </div>
                         <div className="flex space-x-2">
-                          <Button variant="outline" size="sm" className="flex-1 hover:bg-purple-50 hover:border-purple-300">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1 hover:bg-purple-50 hover:border-purple-300"
+                            onClick={() => handleReadStory(story)}
+                          >
                             Read
                           </Button>
                           <Button 
@@ -553,15 +722,35 @@ export default function LearnPage() {
               ))}
               <ScrollReveal direction="up" delay={0.2}>
                 <motion.div whileHover={{ scale: 1.02, y: -4 }}>
-                  <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 hover:shadow-xl transition-all duration-300">
+                  <Card className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50 hover:shadow-xl transition-all duration-300">
                     <CardContent className="p-6">
-                      <h3 className="font-bold text-xl text-gray-900 mb-3">🤔 Ethical Dilemma</h3>
-                      <div className="flex flex-wrap gap-2 text-sm text-gray-600 mb-4">
-                        <span>🎯 Age: 10+ years</span>
-                        <span>⭐ 4.9/5</span>
-                      </div>
-                      <Button variant="outline" size="sm" className="w-full hover:bg-purple-100 hover:border-purple-400">
-                        Explore Dilemma
+                      <h3 className="font-bold text-xl text-gray-900 mb-3">🤔 Moral Dilemma</h3>
+                      <p className="text-gray-600 mb-4 text-sm">Think deeply about Jain values through challenging ethical scenarios.</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full hover:bg-indigo-100 hover:border-indigo-400"
+                        onClick={async () => {
+                          setLoadingDilemma(true);
+                          try {
+                            const response = await fetch('/api/moral-dilemma');
+                            const data = await response.json();
+                            if (data.success && data.dilemma) {
+                              setMoralDilemma(data.dilemma);
+                              setSelectedDilemmaOption(null);
+                            } else {
+                              alert('Failed to generate moral dilemma. Please try again.');
+                            }
+                          } catch (error) {
+                            console.error('Error fetching moral dilemma:', error);
+                            alert('Failed to generate moral dilemma. Please try again.');
+                          } finally {
+                            setLoadingDilemma(false);
+                          }
+                        }}
+                        disabled={loadingDilemma}
+                      >
+                        {loadingDilemma ? 'Generating...' : 'Generate New Dilemma'}
                       </Button>
                     </CardContent>
                   </Card>
@@ -570,6 +759,164 @@ export default function LearnPage() {
             </div>
           </div>
         </ScrollReveal>
+
+        {moralDilemma && (
+          <ScrollReveal direction="up" delay={0.1}>
+            <div className="relative mt-8 mb-8">
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-100/50 via-transparent to-purple-100/50 rounded-3xl blur-3xl" />
+              <Card className="relative bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 shadow-xl overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-500" />
+                <CardHeader>
+                  <CardTitle className="text-xl sm:text-2xl font-bold flex items-center text-gray-900">
+                    <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-indigo-600" />
+                    Moral Dilemma
+                  </CardTitle>
+                  <CardDescription className="text-sm sm:text-base mt-1">
+                    {moralDilemma.jainPrinciple}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="bg-white/60 rounded-xl p-4 sm:p-6 border border-indigo-100">
+                    <h4 className="font-bold text-lg sm:text-xl text-gray-900 mb-3">📖 Scenario</h4>
+                    <p className="text-gray-700 text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
+                      {moralDilemma.scenario}
+                    </p>
+                  </div>
+
+                  <div className="bg-white/60 rounded-xl p-4 sm:p-6 border border-indigo-100">
+                    <h4 className="font-bold text-lg sm:text-xl text-gray-900 mb-4">❓ {moralDilemma.question}</h4>
+                    <div className="space-y-3">
+                      {moralDilemma.options.map((option: string, index: number) => (
+                        <motion.button
+                          key={index}
+                          onClick={() => setSelectedDilemmaOption(index)}
+                          whileHover={{ scale: selectedDilemmaOption !== index ? 1.02 : 1 }}
+                          whileTap={{ scale: selectedDilemmaOption !== index ? 0.98 : 1 }}
+                          className={cn(
+                            "w-full text-left p-4 rounded-xl border-2 transition-all duration-300 font-medium text-sm sm:text-base",
+                            selectedDilemmaOption === index
+                              ? "bg-indigo-100 border-indigo-500 text-indigo-700 shadow-lg"
+                              : "bg-white border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 text-gray-800"
+                          )}
+                        >
+                          {option}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {selectedDilemmaOption !== null && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl p-4 sm:p-6 border-2 border-indigo-300"
+                    >
+                      <h4 className="font-bold text-lg sm:text-xl text-gray-900 mb-3">💡 Lesson</h4>
+                      <p className="text-gray-700 text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
+                        {moralDilemma.lesson}
+                      </p>
+                      <p className="text-xs sm:text-sm text-indigo-600 mt-4 font-medium">
+                        💭 Reflection: Consider how this dilemma applies to your daily life and how you can apply Jain principles in similar situations.
+                      </p>
+                    </motion.div>
+                  )}
+
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      setLoadingDilemma(true);
+                      setSelectedDilemmaOption(null);
+                      try {
+                        const response = await fetch('/api/moral-dilemma');
+                        const data = await response.json();
+                        if (data.success && data.dilemma) {
+                          setMoralDilemma(data.dilemma);
+                        } else {
+                          alert('Failed to generate moral dilemma. Please try again.');
+                        }
+                      } catch (error) {
+                        console.error('Error fetching moral dilemma:', error);
+                        alert('Failed to generate moral dilemma. Please try again.');
+                      } finally {
+                        setLoadingDilemma(false);
+                      }
+                    }}
+                    disabled={loadingDilemma}
+                    className="w-full hover:bg-indigo-100 hover:border-indigo-400"
+                  >
+                    {loadingDilemma ? 'Generating...' : 'Generate Another Dilemma'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </ScrollReveal>
+        )}
+
+        <Dialog open={isStoryDialogOpen} onOpenChange={setIsStoryDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold flex items-center justify-between">
+                <span className="flex items-center">
+                  <BookOpen className="w-6 h-6 mr-2 text-purple-600" />
+                  {selectedStory?.title}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsStoryDialogOpen(false)}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </DialogTitle>
+              {selectedStory && (
+                <div className="flex flex-wrap gap-2 text-sm text-gray-600 pt-2">
+                  <span>🎯 Age: {selectedStory.age}</span>
+                  <span>⭐ {selectedStory.rating.toFixed(2)}/5</span>
+                  <span>📚 {selectedStory.pages} pages</span>
+                </div>
+              )}
+            </DialogHeader>
+            <div className="mt-4">
+              {loadingStory ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading story content...</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="prose max-w-none">
+                  <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {storyContent || selectedStory?.description || `This story is about ${selectedStory?.title}. The full content will be available soon.`}
+                  </div>
+                </div>
+              )}
+            </div>
+            {selectedStory?.content && !loadingStory && (
+              <div className="mt-6 flex space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => handleNarrateStory(selectedStory)}
+                  disabled={narratingStoryId === selectedStory.id && !audioUrl}
+                  className="flex-1"
+                >
+                  {narratingStoryId === selectedStory.id && audioUrl ? (
+                    <>
+                      <Pause className="w-4 h-4 mr-2" />
+                      Pause Narration
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 mr-2" />
+                      Listen to Story
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         <ScrollReveal direction="up" delay={0.4}>
           <div>

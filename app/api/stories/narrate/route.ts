@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
           'xi-api-key': apiKey,
         },
         body: JSON.stringify({
-          text: text.substring(0, 5000), // Limit to 5000 characters per request
+          text: text.substring(0, 2000), // Limit to 2000 characters per request for faster generation
           model_id: 'eleven_multilingual_v2', // Supports multiple languages including Hindi
           voice_settings: {
             stability: 0.5,
@@ -50,7 +50,29 @@ export async function POST(request: NextRequest) {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('ElevenLabs API error:', errorText);
-        throw new Error(`ElevenLabs API error: ${response.status}`);
+        
+        let errorMessage = 'Failed to generate narration';
+        try {
+          const errorJson = JSON.parse(errorText);
+          if (errorJson.detail?.status === 'too_many_concurrent_requests') {
+            errorMessage = 'Too many requests in progress. Please wait a moment and try again.';
+          } else if (errorJson.detail?.status === 'quota_exceeded') {
+            errorMessage = 'Narration quota exceeded. Please upgrade your ElevenLabs subscription or try again later.';
+          } else if (errorJson.detail?.message) {
+            errorMessage = errorJson.detail.message;
+          }
+        } catch {
+          // If JSON parsing fails, use default message
+        }
+        
+        return NextResponse.json(
+          {
+            error: errorMessage,
+            message: errorMessage,
+            status: response.status,
+          },
+          { status: response.status }
+        );
       }
 
       const audioBuffer = await response.arrayBuffer();
