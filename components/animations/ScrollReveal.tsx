@@ -17,14 +17,19 @@ export function ScrollReveal({
   className = "",
 }: ScrollRevealProps) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.3 });
+  const [mounted, setMounted] = useState(false);
+  const isInView = useInView(ref, { once: false, amount: 0.1 });
   const controls = useAnimation();
 
   useEffect(() => {
-    if (isInView) {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && isInView) {
       controls.start("visible");
     }
-  }, [isInView, controls]);
+  }, [isInView, controls, mounted]);
 
   const variants = {
     hidden: {
@@ -45,6 +50,10 @@ export function ScrollReveal({
       },
     },
   };
+
+  if (!mounted) {
+    return <div ref={ref} className={className}>{children}</div>;
+  }
 
   return (
     <motion.div
