@@ -109,10 +109,11 @@ export async function POST(req: NextRequest) {
 
     let context = "";
     
-    // Simple RAG: Search for relevant articles based on keywords
-    try {
-      const articles = await getArticles(20);
-      const lowerMessage = message.toLowerCase();
+            // Simple RAG: Search for relevant articles based on keywords
+            try {
+              // Reduced from 20 to 5 for faster loading
+              const articles = await getArticles(5);
+              const lowerMessage = message.toLowerCase();
       
       const relevantArticles = articles.filter(article => {
         const title = article.title?.toLowerCase() || "";
@@ -175,19 +176,25 @@ User's question: ${message}
 Please provide a helpful, accurate response that matches the user's level of understanding and is entirely in ${languageMap[language] || 'English'} language.${action ? ' Keep your response concise (1-2 sentences) as the user will be directed to more detailed content via an action button.' : ''}`;
 
     // Generate response
-    let responseText: string;
+    let responseText: string = "";
             try {
               const result = await model.generateContent(fullPrompt);
               const response = await result.response;
-              responseText = response.text();
+              const rawText = response.text();
               
               // Validate response
-              if (!responseText || responseText.trim().length === 0) {
+              if (!rawText || rawText.trim().length === 0) {
                 throw new Error('Empty response from Gemini API');
               }
               
               // Clean the generated text to remove unwanted content
-              responseText = cleanArticleContent(responseText);
+              responseText = cleanArticleContent(rawText);
+              
+              // Ensure we still have content after cleaning
+              if (!responseText || responseText.trim().length === 0) {
+                // If cleaning removed everything, use the raw text
+                responseText = rawText.substring(0, 500).trim();
+              }
             } catch (error) {
       console.error('Gemini API error:', error);
       
@@ -216,7 +223,13 @@ Please provide a helpful, accurate response that matches the user's level of und
         }, { status: 429 });
       }
       
+      // If we get here, there was an error but we'll handle it in the outer catch
       throw error;
+    }
+
+    // Ensure responseText is always defined and has content
+    if (!responseText || responseText.trim().length === 0) {
+      responseText = "I apologize, but I couldn't generate a complete response. Please try again.";
     }
 
     // Make response more concise if action button is available (but only for chat, not for section text generation)
@@ -227,11 +240,11 @@ Please provide a helpful, accurate response that matches the user's level of und
       message.includes('educational and engaging')
     );
     
-    if (action && !isSectionGeneration && responseText.length > 150) {
+    if (action && !isSectionGeneration && responseText && responseText.length > 150) {
       const firstSentence = responseText.split(/[.!?]/)[0];
-      if (firstSentence.length > 50 && firstSentence.length < 200) {
+      if (firstSentence && firstSentence.length > 50 && firstSentence.length < 200) {
         responseText = firstSentence.trim() + '.';
-      } else {
+      } else if (responseText.length > 150) {
         responseText = responseText.substring(0, 150).trim() + '...';
       }
     }

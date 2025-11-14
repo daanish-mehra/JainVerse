@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { MessageCircle, BookOpen, Heart, Book, Mic, Sparkles, ArrowDown } from "lucide-react";
+import { MessageCircle, BookOpen, Heart, Book, ArrowDown } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
@@ -54,8 +54,6 @@ const quickActions = [
   { icon: BookOpen, label: "Learn", href: "/learn", color: "from-jainGreen-400 to-jainGreen-600", description: "Interactive lessons and quizzes" },
   { icon: Heart, label: "Practice", href: "/practice", color: "from-gold-400 to-gold-600", description: "Track your spiritual practices" },
   { icon: Book, label: "Stories", href: "/stories", color: "from-purple-400 to-purple-600", description: "Inspiring Jain stories" },
-  { icon: Mic, label: "Pronounce", href: "/pronounce", color: "from-blue-400 to-blue-600", description: "Learn proper pronunciation" },
-  { icon: Sparkles, label: "Social", href: "/social", color: "from-pink-400 to-pink-600", description: "Create content" },
 ];
 
 export default function HomePage() {
@@ -155,15 +153,6 @@ export default function HomePage() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 1, delay: 1.5 }}
                 className="text-lg sm:text-xl md:text-2xl text-gray-700 font-light leading-relaxed px-2"
-              >
-                Where Ancient Wisdom Meets Modern AI
-              </motion.p>
-              
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1, delay: 1.8 }}
-                className="text-base sm:text-lg text-gray-600 leading-relaxed px-4 max-w-md mx-auto"
               >
                 Where Ancient Wisdom Meets Modern AI
               </motion.p>

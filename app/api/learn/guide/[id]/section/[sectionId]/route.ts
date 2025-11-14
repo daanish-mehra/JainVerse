@@ -69,15 +69,42 @@ async function getSectionData(guideId: number, sectionId: number) {
 
     // Generate summary and quiz from article - use faster fallbacks
     let summary = "";
-    let quiz = null;
+    let quiz: {
+      question: string;
+      options: string[];
+      correct: number;
+      explanation: string;
+      source: string;
+    } | null = null;
 
     if (relevantArticle && relevantArticle.content) {
       // Clean article content - remove unwanted elements
       let cleanedContent = cleanArticleContent(relevantArticle.content);
       
-      // Use cleaned article content for faster loading, enhance later if needed
-      const contentSnippet = cleanedContent.substring(0, 1000);
-      summary = contentSnippet + (cleanedContent.length > 1000 ? "..." : "");
+      // Use cleaned article content for faster loading - increased snippet size for better initial display
+      const contentSnippet = cleanedContent.substring(0, 2000);
+      summary = contentSnippet + (cleanedContent.length > 2000 ? "..." : "");
+      
+      // Generate quiz immediately if we have content (but with timeout)
+      try {
+        const quizPromise = generateQuizFromArticle({
+          title: relevantArticle.title || moduleTitle,
+          content: cleanedContent.substring(0, 2000), // Reduced from 3000 for speed
+        });
+        
+        // Wait max 3 seconds for quiz generation
+        const quizTimeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Quiz generation timeout')), 3000)
+        );
+        
+        const generatedQuiz = await Promise.race([quizPromise, quizTimeout]) as any;
+        if (generatedQuiz) {
+          quiz = generatedQuiz;
+        }
+      } catch (error) {
+        console.warn("Quiz generation failed or timed out:", error);
+        // Continue with fallback quiz
+      }
       
       // Generate enhanced summary in background (non-blocking) for next time
       generateSummaryFromArticle({
@@ -101,14 +128,13 @@ async function getSectionData(guideId: number, sectionId: number) {
         }
       }).catch(() => {}); // Silent fail
 
-      // Generate enhanced quiz in background (non-blocking) for next time
-      generateQuizFromArticle({
-        title: relevantArticle.title || moduleTitle,
-        content: cleanedContent.substring(0, 3000), // Limit for speed
-      }).then(generatedQuiz => {
-        if (generatedQuiz) {
-          // Update cache for future requests
-          if (container) {
+      // Update quiz in background if we generated one
+      if (quiz) {
+        generateQuizFromArticle({
+          title: relevantArticle.title || moduleTitle,
+          content: cleanedContent.substring(0, 2000),
+        }).then(generatedQuiz => {
+          if (generatedQuiz && container) {
             const sectionKey = `guide-${guideId}-section-${sectionId}`;
             container.items.upsert({
               id: sectionKey,
@@ -120,8 +146,8 @@ async function getSectionData(guideId: number, sectionId: number) {
               updatedAt: new Date().toISOString(),
             }).catch(() => {});
           }
-        }
-      }).catch(() => {}); // Silent fail
+        }).catch(() => {}); // Silent fail
+      }
       
     } else {
       // Fallback summary

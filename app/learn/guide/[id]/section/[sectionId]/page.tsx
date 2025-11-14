@@ -73,26 +73,37 @@ export default function SectionPage() {
     }
   };
 
-  const generateSectionText = async (title: string, existingSummary: string) => {
-    try {
-      // Use chatbot API to generate comprehensive text based on section topic
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: `Provide a comprehensive, detailed explanation about "${title}" in Jainism. Include key concepts, principles, historical context, and practical applications. Make it educational and engaging, suitable for learners. Keep it concise (300-400 words).
+          const generateSectionText = async (title: string, existingSummary: string) => {
+            try {
+              // Skip AI generation if we already have good content (faster)
+              if (existingSummary && existingSummary.length > 500) {
+                return;
+              }
+              
+              // Use chatbot API to generate comprehensive text based on section topic
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+              
+              const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal,
+                body: JSON.stringify({
+                  message: `Provide a concise, clear explanation about "${title}" in Jainism. Include key concepts and principles. Keep it brief (200-300 words).
 
-IMPORTANT: 
-- Write only educational content about the topic
-- Do NOT include questions, quizzes, or numbered lists
-- Do NOT include contact information, addresses, or emails
-- Do NOT include website URLs or organization details
-- Write in clear, flowing paragraphs
-- Focus on explaining the concepts and teachings`,
-          language: 'EN',
-          mode: 'intermediate',
-        }),
-      });
+        IMPORTANT: 
+        - Write only educational content about the topic
+        - Do NOT include questions, quizzes, or numbered lists
+        - Do NOT include contact information, addresses, or emails
+        - Do NOT include website URLs or organization details
+        - Write in clear, flowing paragraphs
+        - Focus on explaining the concepts and teachings`,
+                  language: 'EN',
+                  mode: 'intermediate',
+                }),
+              });
+              
+              clearTimeout(timeoutId);
 
       const data = await response.json();
       let text = data.text || data.message || existingSummary;
@@ -159,11 +170,14 @@ IMPORTANT:
           }
         }
       }
-    } catch (error) {
-      console.error("Error generating section text:", error);
-      // Keep existing text
-    }
-  };
+            } catch (error: any) {
+              // Don't log timeout errors - they're expected
+              if (error?.name !== 'AbortError') {
+                console.error("Error generating section text:", error);
+              }
+              // Keep existing text
+            }
+          };
 
   const generateQuizFromText = async (text: string, title: string) => {
     try {

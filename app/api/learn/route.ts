@@ -20,7 +20,8 @@ export async function getLearningPathsFromData() {
     let articles: any[] = [];
     
     try {
-      articles = await getArticles(50);
+      // Reduced from 50 to 20 for faster loading
+      articles = await getArticles(20);
     } catch (error) {
       try {
         const articlesPath = path.join(process.cwd(), "data", "articles.json");
@@ -417,7 +418,7 @@ async function getStoriesFromArticles(): Promise<any[]> {
                 
                 if (story) {
                   const storyData = {
-                    id: stories.length + 1,
+                    id: String(stories.length + 1),
                     title: story.title,
                     content: story.content,
                     moral: story.moral,
@@ -499,22 +500,52 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  if (type === "quizzes") {
+    if (type === "quizzes") {
     const quizId = searchParams.get("id");
-    const quizzes = await generateQuizzesFromArticles();
     
-    if (quizId) {
-      const quiz = quizzes.find((q) => q.id === parseInt(quizId));
-      if (!quiz) {
-        return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
+    // Try to get from cache first (fast)
+    const container = await getContainer("quizzes");
+    if (container) {
+      try {
+        const querySpec = {
+          query: 'SELECT TOP 5 * FROM c ORDER BY c.createdAt DESC',
+        };
+        const { resources } = await container.items.query(querySpec).fetchAll();
+        if (resources.length > 0) {
+          const quizzes = resources.map((q: any, idx: number) => ({
+            id: idx + 1,
+            question: q.question || q.text,
+            options: q.options || [],
+            correct: q.correct || 0,
+            explanation: q.explanation,
+            source: q.source || "Jainworld.com",
+            topic: q.topic || q.title,
+          }));
+          
+          if (quizId) {
+            const quiz = quizzes.find((q) => q.id === parseInt(quizId));
+            if (quiz) {
+              return NextResponse.json(quiz, {
+                headers: {
+                  'Cache-Control': 'public, s-maxage=3600',
+                },
+              });
+            }
+          }
+          
+          return NextResponse.json({ quizzes }, {
+            headers: {
+              'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+            },
+          });
+        }
+      } catch (error) {
+        console.warn("Failed to fetch cached quizzes:", error);
       }
-      return NextResponse.json(quiz, {
-        headers: {
-          'Cache-Control': 'public, s-maxage=3600',
-        },
-      });
     }
-    return NextResponse.json({ quizzes }, {
+    
+    // Fallback: return empty quizzes instead of generating (slow)
+    return NextResponse.json({ quizzes: [] }, {
       headers: {
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
       },
@@ -522,10 +553,38 @@ export async function GET(request: NextRequest) {
   }
 
   if (type === "stories") {
-    const stories = await getStoriesFromArticles();
-    return NextResponse.json({
-      stories,
-    }, {
+    // Try to get from cache first (fast)
+    const container = await getContainer("stories");
+    if (container) {
+      try {
+        const querySpec = {
+          query: 'SELECT TOP 5 * FROM c ORDER BY c.createdAt DESC',
+        };
+        const { resources } = await container.items.query(querySpec).fetchAll();
+        if (resources.length > 0) {
+          const stories = resources.map((s: any, idx: number) => ({
+            id: idx + 1,
+            title: s.title || "Jain Story",
+            age: s.age || "8-12 years",
+            rating: s.rating || 4.5,
+            pages: s.pages || 1,
+            description: s.moral || s.description || "A meaningful Jain story",
+            content: s.content,
+          }));
+          
+          return NextResponse.json({ stories }, {
+            headers: {
+              'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+            },
+          });
+        }
+      } catch (error) {
+        console.warn("Failed to fetch cached stories:", error);
+      }
+    }
+    
+    // Fallback: return empty stories instead of generating (slow)
+    return NextResponse.json({ stories: [] }, {
       headers: {
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
       },
@@ -576,7 +635,12 @@ export async function GET(request: NextRequest) {
       });
     } catch (error) {
       console.error("Achievements API error:", error);
-      return NextResponse.json({ achievements: mockAchievements });
+      return NextResponse.json({ 
+        achievements: [
+          { id: 1, title: "First Steps", icon: "🌱", description: "Complete your first quiz", earned: false },
+          { id: 2, title: "Quiz Master", icon: "🥇", description: "Complete 10 quizzes", earned: false },
+        ] 
+      });
     }
   }
 
@@ -618,11 +682,13 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const paths = await getLearningPathsFromData();
+  
   return NextResponse.json({
-    paths: mockLearningPaths,
-    quizzes: mockQuizzes,
-    stories: mockStories,
-    achievements: mockAchievements,
+    paths: paths,
+    quizzes: [],
+    stories: [],
+    achievements: [],
   });
 }
 

@@ -83,25 +83,35 @@ export default function LearnPage() {
 
   const fetchData = async () => {
     try {
-      const [pathsRes, quizzesRes, storiesRes, achievementsRes, progressRes] = await Promise.all([
+      setLoading(true);
+      // Load critical data first, then load other data
+      const [pathsRes, achievementsRes, progressRes] = await Promise.all([
         fetch('/api/learn?type=paths'),
-        fetch('/api/learn?type=quizzes'),
-        fetch('/api/learn?type=stories'),
         fetch('/api/learn?type=achievements'),
         fetch('/api/learn?type=progress'),
       ]);
-
+      
       const pathsData = await pathsRes.json();
-      const quizzesData = await quizzesRes.json();
-      const storiesData = await storiesRes.json();
       const achievementsData = await achievementsRes.json();
       const progressData = await progressRes.json();
 
       setLearningPaths(pathsData.paths || []);
-      setQuizzes(quizzesData.quizzes || []);
-      setStories(storiesData.stories || []);
       setAchievements(achievementsData.achievements || []);
       setPunyaPoints(progressData.punyaPoints || 0);
+      
+      // Set loading to false early for better UX
+      setLoading(false);
+      
+      // Load non-critical data in background
+      const [quizzesRes, storiesRes] = await Promise.all([
+        fetch('/api/learn?type=quizzes'),
+        fetch('/api/learn?type=stories'),
+      ]);
+
+      const quizzesData = await quizzesRes.json();
+      const storiesData = await storiesRes.json();
+      setQuizzes(quizzesData.quizzes || []);
+      setStories(storiesData.stories || []);
     } catch (error) {
       console.error('Error fetching learn data:', error);
     } finally {

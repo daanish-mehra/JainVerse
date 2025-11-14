@@ -113,7 +113,7 @@ export async function getAllQuotes(): Promise<Quote[]> {
 
 let articlesCache: Article[] | null = null;
 let articlesCacheTime: number = 0;
-const ARTICLES_CACHE_DURATION = 1800000;
+const ARTICLES_CACHE_DURATION = 3600000; // Increased to 1 hour
 
 export async function getArticles(limit: number = 10): Promise<Article[]> {
   try {
@@ -128,7 +128,7 @@ export async function getArticles(limit: number = 10): Promise<Article[]> {
     
     const querySpec = {
       query: 'SELECT TOP @limit * FROM c ORDER BY c.createdAt DESC',
-      parameters: [{ name: '@limit', value: Math.min(limit, 50) }],
+      parameters: [{ name: '@limit', value: Math.min(limit, 30) }], // Reduced max from 50 to 30
     };
     
     const { resources } = await container.items.query(querySpec).fetchAll();
