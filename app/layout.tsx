@@ -33,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${manrope.variable}`}>
       <body className="font-sans antialiased min-h-screen bg-ivory-50">
-        <div className="max-w-md mx-auto bg-white min-h-screen shadow-xl">
+        <div className="max-w-md mx-auto bg-white min-h-screen shadow-xl overflow-x-hidden">
           {children}
           <BottomNav />
         </div>

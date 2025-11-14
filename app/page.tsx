@@ -73,6 +73,7 @@ export default function HomePage() {
     const fetchQuote = async () => {
       try {
         const response = await fetch('/api/quotes');
+        if (!response.ok) throw new Error('Failed to fetch');
         const data = await response.json();
         if (data.success && data.quote) {
           setDailyWisdom({
@@ -98,11 +99,17 @@ export default function HomePage() {
     };
 
     const updateTimeAndGreeting = () => {
-      const now = new Date();
-      const hours = now.getHours();
-      const greetingText = hours < 12 ? "Morning" : hours < 18 ? "Afternoon" : "Evening";
-      setGreeting(greetingText);
-      setCurrentTime(formatDate(now));
+      try {
+        const now = new Date();
+        const hours = now.getHours();
+        const greetingText = hours < 12 ? "Morning" : hours < 18 ? "Afternoon" : "Evening";
+        setGreeting(greetingText);
+        setCurrentTime(formatDate(now));
+      } catch (error) {
+        console.error('Error setting time:', error);
+        setGreeting("");
+        setCurrentTime("");
+      }
     };
 
     fetchQuote();
