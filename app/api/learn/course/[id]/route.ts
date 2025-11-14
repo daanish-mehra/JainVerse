@@ -5,6 +5,8 @@ import fs from "fs";
 import path from "path";
 import { getArticles } from "@/lib/cosmos";
 
+export const revalidate = 3600;
+
 async function getLearningPathsFromData() {
   try {
     let articles: any[] = [];

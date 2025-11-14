@@ -111,18 +111,33 @@ export async function getAllQuotes(): Promise<Quote[]> {
   }
 }
 
+let articlesCache: Article[] | null = null;
+let articlesCacheTime: number = 0;
+const ARTICLES_CACHE_DURATION = 1800000;
+
 export async function getArticles(limit: number = 10): Promise<Article[]> {
   try {
+    const now = Date.now();
+    
+    if (articlesCache && (now - articlesCacheTime) < ARTICLES_CACHE_DURATION) {
+      return articlesCache.slice(0, limit);
+    }
+
     const container = await getContainer('articles');
     if (!container) return [];
     
     const querySpec = {
       query: 'SELECT TOP @limit * FROM c ORDER BY c.createdAt DESC',
-      parameters: [{ name: '@limit', value: limit }],
+      parameters: [{ name: '@limit', value: Math.min(limit, 50) }],
     };
     
     const { resources } = await container.items.query(querySpec).fetchAll();
-    return resources as Article[];
+    const articles = resources as Article[];
+    
+    articlesCache = articles;
+    articlesCacheTime = now;
+    
+    return articles.slice(0, limit);
   } catch (error) {
     console.warn('Failed to fetch articles:', error);
     return [];

@@ -5,18 +5,39 @@ import fs from "fs";
 import path from "path";
 import { getArticles } from "@/lib/cosmos";
 
+export const revalidate = 3600;
+
+let cachedPaths: any[] | null = null;
+let pathsCacheTime: number = 0;
+const CACHE_DURATION = 3600000;
+
 async function getLearningPathsFromData() {
   try {
+    const now = Date.now();
+    if (cachedPaths && (now - pathsCacheTime) < CACHE_DURATION) {
+      return cachedPaths;
+    }
+
     let articles: any[] = [];
     
     try {
-      articles = await getArticles(100);
+      articles = await getArticles(50);
     } catch (error) {
-      const articlesPath = path.join(process.cwd(), "data", "articles.json");
-      if (fs.existsSync(articlesPath)) {
-        const fileContent = fs.readFileSync(articlesPath, "utf-8");
-        articles = JSON.parse(fileContent);
+      try {
+        const articlesPath = path.join(process.cwd(), "data", "articles.json");
+        if (fs.existsSync(articlesPath)) {
+          const fileContent = fs.readFileSync(articlesPath, "utf-8");
+          articles = JSON.parse(fileContent).slice(0, 50);
+        }
+      } catch (fileError) {
+        console.warn("Failed to load articles:", fileError);
       }
+    }
+
+    if (articles.length === 0) {
+      cachedPaths = [];
+      pathsCacheTime = now;
+      return cachedPaths;
     }
 
     const paths: any[] = [];
@@ -29,29 +50,29 @@ async function getLearningPathsFromData() {
       "Mantras": [],
     };
 
-    articles.forEach((article) => {
+    for (const article of articles) {
       const title = article.title?.toLowerCase() || "";
-      const content = article.content?.toLowerCase() || "";
       const url = article.url?.toLowerCase() || "";
+      const contentSnippet = (article.content?.toLowerCase() || "").substring(0, 200);
 
-      if (title.includes("philosophy") || content.includes("philosophy") || url.includes("philosophy")) {
-        pathCategories["Philosophy"].push(article);
+      if (title.includes("philosophy") || url.includes("philosophy") || contentSnippet.includes("philosophy")) {
+        if (pathCategories["Philosophy"].length < 15) pathCategories["Philosophy"].push(article);
       } else if (title.includes("history") || url.includes("history")) {
-        pathCategories["History"].push(article);
+        if (pathCategories["History"].length < 10) pathCategories["History"].push(article);
       } else if (title.includes("principle") || url.includes("principle")) {
-        pathCategories["Principles"].push(article);
+        if (pathCategories["Principles"].length < 10) pathCategories["Principles"].push(article);
       } else if (title.includes("practice") || title.includes("meditation") || title.includes("yoga") ||
-                 content.includes("meditation") || content.includes("dhyan") || content.includes("samayik") ||
-                 content.includes("pratikraman") || content.includes("fasting") || content.includes("tapa")) {
-        pathCategories["Practices"].push(article);
+                 contentSnippet.includes("meditation") || contentSnippet.includes("dhyan") || contentSnippet.includes("samayik") ||
+                 contentSnippet.includes("pratikraman") || contentSnippet.includes("fasting") || contentSnippet.includes("tapa")) {
+        if (pathCategories["Practices"].length < 12) pathCategories["Practices"].push(article);
       } else if (title.includes("scripture") || title.includes("tattvarth") || title.includes("samayasar") ||
-                 content.includes("acharya kundkund") || content.includes("sutra")) {
-        pathCategories["Scriptures"].push(article);
+                 contentSnippet.includes("acharya kundkund") || contentSnippet.includes("sutra")) {
+        if (pathCategories["Scriptures"].length < 10) pathCategories["Scriptures"].push(article);
       } else if (title.includes("mantra") || title.includes("namokar") || title.includes("prayer") ||
-                 content.includes("namokar") || content.includes("mantra")) {
-        pathCategories["Mantras"].push(article);
+                 contentSnippet.includes("namokar") || contentSnippet.includes("mantra")) {
+        if (pathCategories["Mantras"].length < 8) pathCategories["Mantras"].push(article);
       }
-    });
+    }
 
     let pathId = 1;
     
@@ -118,7 +139,14 @@ async function getLearningPathsFromData() {
       });
     }
 
-    return paths.length > 0 ? paths : [];
+    if (paths.length > 0) {
+      cachedPaths = paths;
+    } else {
+      cachedPaths = [];
+    }
+    
+    pathsCacheTime = now;
+    return cachedPaths;
   } catch (error) {
     console.error("Error creating learning paths:", error);
     return [];
