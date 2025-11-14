@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getArticles } from "@/lib/cosmos";
+import { generateQuizFromArticle } from "@/lib/azure-openai";
 import fs from "fs";
 import path from "path";
 
@@ -73,7 +74,8 @@ async function getLearningPathsFromData() {
           "Main Principles of Jainism",
           "Living with Others",
           "The Soul and Liberation"
-        ]
+        ],
+        summary: pathCategories["Principles"][0]?.content?.substring(0, 200) + "..." || "Core Jain principles and fundamentals"
       });
     }
 
@@ -231,44 +233,91 @@ function getDefaultLearningPaths() {
   ];
 }
 
-const mockQuizzes = [
-  {
-    id: 1,
-    question: "What is Ahimsa?",
-    options: ["Non-violence", "Truth", "Non-stealing", "Celibacy"],
-    correct: 0,
-    explanation: "Ahimsa is the principle of non-violence, which is the foundation of Jain philosophy.",
-    source: "Tattvarth Sutra",
-    topic: "Jain Philosophy Basics",
-  },
-  {
-    id: 2,
-    question: "What are the main principles of Jainism?",
-    options: ["Ahimsa, Satya, Asteya", "Ahimsa, Anekantvad, Aparigraha", "Ahimsa, Karma, Moksha", "All of the above"],
-    correct: 1,
-    explanation: "The main principles are Ahimsa (non-violence), Anekantvad (multi-sidedness), and Aparigraha (non-attachment).",
-    source: "Jainworld.com",
-    topic: "Jain Philosophy Basics",
-  },
-  {
-    id: 3,
-    question: "What is Anekantvad?",
-    options: ["Non-attachment", "Multi-sidedness", "Non-violence", "Truth"],
-    correct: 1,
-    explanation: "Anekantvad is the principle of multi-sidedness, acknowledging that reality has multiple aspects.",
-    source: "Tattvarth Sutra",
-    topic: "Jain Philosophy Basics",
-  },
-  {
-    id: 4,
-    question: "What is the purpose of Samayik?",
-    options: ["To earn money", "To practice equanimity and self-contemplation", "To socialize with others", "To eat food"],
-    correct: 1,
-    explanation: "Samayik is a practice of equanimity and self-contemplation for spiritual purification.",
-    source: "Jainworld.com",
-    topic: "Meditation & Practices",
-  },
-];
+async function generateQuizzesFromArticles(): Promise<any[]> {
+  try {
+    let articles: any[] = [];
+    
+    try {
+      articles = await getArticles(10);
+    } catch (error) {
+      const articlesPath = path.join(process.cwd(), "data", "articles.json");
+      if (fs.existsSync(articlesPath)) {
+        const fileContent = fs.readFileSync(articlesPath, "utf-8");
+        articles = JSON.parse(fileContent);
+      }
+    }
+
+    if (articles.length === 0) {
+      return getDefaultQuizzes();
+    }
+
+    const quizzes: any[] = [];
+    let quizId = 1;
+
+    for (const article of articles.slice(0, 5)) {
+      try {
+        const quiz = await generateQuizFromArticle({
+          title: article.title || "Jain Teaching",
+          content: article.content || "",
+        });
+        
+        quizzes.push({
+          id: quizId++,
+          ...quiz,
+          topic: article.title || "Jain Philosophy",
+        });
+      } catch (error) {
+        console.error(`Error generating quiz from article "${article.title}":`, error);
+      }
+    }
+
+    return quizzes.length > 0 ? quizzes : getDefaultQuizzes();
+  } catch (error) {
+    console.error("Error generating quizzes:", error);
+    return getDefaultQuizzes();
+  }
+}
+
+function getDefaultQuizzes() {
+  return [
+    {
+      id: 1,
+      question: "What is Ahimsa?",
+      options: ["Non-violence", "Truth", "Non-stealing", "Celibacy"],
+      correct: 0,
+      explanation: "Ahimsa is the principle of non-violence, which is the foundation of Jain philosophy.",
+      source: "Tattvarth Sutra",
+      topic: "Jain Philosophy Basics",
+    },
+    {
+      id: 2,
+      question: "What are the main principles of Jainism?",
+      options: ["Ahimsa, Satya, Asteya", "Ahimsa, Anekantvad, Aparigraha", "Ahimsa, Karma, Moksha", "All of the above"],
+      correct: 1,
+      explanation: "The main principles are Ahimsa (non-violence), Anekantvad (multi-sidedness), and Aparigraha (non-attachment).",
+      source: "Jainworld.com",
+      topic: "Jain Philosophy Basics",
+    },
+    {
+      id: 3,
+      question: "What is Anekantvad?",
+      options: ["Non-attachment", "Multi-sidedness", "Non-violence", "Truth"],
+      correct: 1,
+      explanation: "Anekantvad is the principle of multi-sidedness, acknowledging that reality has multiple aspects.",
+      source: "Tattvarth Sutra",
+      topic: "Jain Philosophy Basics",
+    },
+    {
+      id: 4,
+      question: "What is the purpose of Samayik?",
+      options: ["To earn money", "To practice equanimity and self-contemplation", "To socialize with others", "To eat food"],
+      correct: 1,
+      explanation: "Samayik is a practice of equanimity and self-contemplation for spiritual purification.",
+      source: "Jainworld.com",
+      topic: "Meditation & Practices",
+    },
+  ];
+}
 
 const mockStories = [
   {
@@ -317,14 +366,16 @@ export async function GET(request: NextRequest) {
 
   if (type === "quizzes") {
     const quizId = searchParams.get("id");
+    const quizzes = await generateQuizzesFromArticles();
+    
     if (quizId) {
-      const quiz = mockQuizzes.find((q) => q.id === parseInt(quizId));
+      const quiz = quizzes.find((q) => q.id === parseInt(quizId));
       if (!quiz) {
         return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
       }
       return NextResponse.json(quiz);
     }
-    return NextResponse.json({ quizzes: mockQuizzes });
+    return NextResponse.json({ quizzes });
   }
 
   if (type === "stories") {
@@ -369,7 +420,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const quiz = mockQuizzes.find((q) => q.id === quizId);
+      const quizzes = await generateQuizzesFromArticles();
+      const quiz = quizzes.find((q) => q.id === quizId);
+      
       if (!quiz) {
         return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
       }
