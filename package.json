@@ -12,6 +12,7 @@
     "setup-db": "node scripts/setup_database.js",
     "import-cosmos": "node scripts/import_to_cosmos.js",
     "test-cosmos": "node scripts/test_cosmos.js",
+    "test-quotes": "node scripts/test_quotes_api.js",
     "setup-env": "node scripts/setup_env.js",
     "complete-setup": "node scripts/complete_setup.js"
   },
