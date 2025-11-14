@@ -1,0 +1,33 @@
+# Runtime dependencies
+@azure/cosmos@4.7.0
+@radix-ui/react-dialog@1.0.5
+@radix-ui/react-dropdown-menu@2.0.6
+@radix-ui/react-select@2.0.0
+@radix-ui/react-slot@1.0.2
+@radix-ui/react-tabs@1.0.4
+@supabase/supabase-js@2.81.1
+@tailwindcss/postcss@4.1.17
+axios@1.13.2
+cheerio@1.1.2
+class-variance-authority@0.7.0
+clsx@2.0.0
+dotenv@17.2.3
+framer-motion@10.18.0
+lucide-react@0.294.0
+next@15.0.0
+react@18.2.0
+react-dom@18.2.0
+react-intersection-observer@10.0.0
+tailwind-merge@2.1.0
+
+# Development dependencies
+@types/node@20.10.5
+@types/react@18.2.45
+@types/react-dom@18.2.18
+autoprefixer@10.4.22
+eslint@8.56.0
+eslint-config-next@15.0.0
+postcss@8.5.6
+tailwindcss@3.3.6
+typescript@5.3.3
+
