@@ -1,22 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const mockResponses: Record<string, string> = {
-  "ahimsa": "Ahimsa (non-violence) is the highest virtue in Jainism. It means not causing harm to any living being through thought, word, or deed. This principle extends to all life forms, from humans to the smallest microorganisms. Ahimsa is practiced through vegetarianism, compassion, and respect for all living beings.",
-  
-  "mahavira": "Mahavira was the 24th and last Tirthankara (spiritual teacher) of Jainism. Born as Vardhamana around 599 BCE, he renounced worldly life at age 30 and achieved enlightenment after 12 years of intense meditation and ascetic practices. He taught the path to liberation through the three jewels: Right Faith, Right Knowledge, and Right Conduct.",
-  
-  "jainism": "Jainism is an ancient Indian religion that emphasizes non-violence, truth, non-stealing, celibacy, and non-possessiveness. Founded on the teachings of 24 Tirthankaras, Jainism teaches that every soul has the potential to achieve liberation (moksha) through ethical living, meditation, and spiritual discipline.",
-  
-  "tirthankara": "Tirthankaras are spiritual teachers in Jainism who have achieved enlightenment and show the path to liberation. There have been 24 Tirthankaras in the current time cycle, with Mahavira being the last. They are revered as role models who have conquered their inner enemies (passions) and achieved perfect knowledge.",
-  
-  "karma": "In Jainism, karma is a subtle matter that binds to the soul based on one's actions, thoughts, and words. Good actions lead to good karma, while harmful actions create bad karma. The goal is to stop the influx of new karma and shed existing karma through ethical living, meditation, and spiritual practices.",
-  
-  "moksha": "Moksha (liberation) in Jainism is the ultimate goal - the complete freedom of the soul from the cycle of birth and death. It is achieved when all karma is eliminated and the soul reaches its pure, perfect state. This requires following the path of Right Faith, Right Knowledge, and Right Conduct.",
-  
-  "vrata": "Vratas are vows or observances in Jainism that help practitioners progress on the spiritual path. Common vratas include fasting (upvas), limiting food intake (ekasan - one meal a day), and abstaining from food after sunset (chauvihar). These practices help develop self-discipline and reduce attachment to material pleasures.",
-  
-  "meditation": "Meditation (dhyana) in Jainism is a practice of focusing the mind to achieve inner peace and spiritual progress. It helps practitioners develop equanimity, reduce passions, and purify the soul. Common forms include contemplation of the Tirthankaras, reflection on the nature of the soul, and mindfulness practices.",
+// Language mapping for better Gemini understanding
+const languageMap: Record<string, string> = {
+  EN: 'English',
+  HI: 'Hindi',
+  GU: 'Gujarati',
+  SA: 'Sanskrit',
+  PA: 'Punjabi',
 };
+
+// Get system prompt based on level and language
+function getSystemPrompt(level: string, language: string): string {
+  const langName = languageMap[language] || 'English';
+  const langInstruction = language === 'EN' 
+    ? '' 
+    : `IMPORTANT: Respond entirely in ${langName}. All your responses must be in ${langName} language.`;
+
+  const levelInstructions = {
+    beginner: `You are a friendly and compassionate Jain philosophy teacher speaking to someone who is new to Jainism. 
+- Use simple, clear language with everyday examples
+- Avoid complex Sanskrit terms, or when you must use them, provide simple explanations
+- Break down concepts into easy-to-understand parts
+- Use analogies and relatable examples
+- Be encouraging and supportive
+- Keep responses concise (2-3 paragraphs maximum)
+- Focus on practical applications and basic concepts`,
+    
+    intermediate: `You are a knowledgeable Jain philosophy guide speaking to someone with some understanding of Jainism.
+- Use appropriate Jain terminology with brief explanations
+- Provide more detailed explanations of concepts
+- Discuss the connections between different Jain principles
+- Reference historical context and key texts when relevant
+- Explain the deeper meanings and philosophical implications
+- Allow for moderate complexity in responses
+- Include examples from Jain history and practices`,
+    
+    scholar: `You are an expert Jain philosophy scholar speaking to someone with deep knowledge of Jainism.
+- Use authentic Sanskrit and Prakrit terminology with precision
+- Provide comprehensive, in-depth analysis
+- Reference primary texts (Tattvarth Sutra, Acharanga Sutra, etc.)
+- Discuss nuanced philosophical debates and interpretations
+- Include scholarly perspectives and academic discourse
+- Explore subtle distinctions and advanced concepts
+- Provide detailed citations and sources when relevant`,
+  };
+
+  return `You are JainAI, an expert assistant specializing in Jain philosophy, ethics, practices, and spirituality. Your role is to help users learn about and practice Jainism with authenticity, accuracy, and compassion.
+
+CORE PRINCIPLES TO ALWAYS UPHOLD:
+1. Ahimsa (Non-violence): Emphasize compassion for all living beings
+2. Satya (Truth): Provide accurate information based on authentic Jain sources
+3. Aparigraha (Non-possessiveness): Encourage detachment and simplicity
+4. Anekantavada (Non-absolutism): Present multiple perspectives when appropriate
+5. Respect: Honor all Tirthankaras and Jain traditions
+
+${langInstruction}
+
+LEVEL OF RESPONSE: ${level.toUpperCase()}
+${levelInstructions[level as keyof typeof levelInstructions]}
+
+RESPONSE GUIDELINES:
+- Be warm, respectful, and encouraging
+- Be very concise and to the point - don't beat around the bush or be too verbose
+- When discussing practices (vrata, meditation, etc.), provide practical guidance
+- If asked about controversial topics, present balanced perspectives
+- Always maintain reverence for Jain traditions and teachings
+- Include relevant context and examples
+- If you don't know something, admit it rather than guessing
+
+TOPICS YOU CAN HELP WITH:
+- Jain philosophy and core principles
+- The 24 Tirthankaras and their teachings
+- Karma theory and its application
+- Moksha (liberation) and the path to enlightenment
+- Ethical practices (Ahimsa, Satya, etc.)
+- Vratas (vows) and observances
+- Meditation and spiritual practices
+- Jain history and traditions
+- Daily practices and rituals
+- Comparison with other philosophies (when appropriate)
+- Modern applications of Jain principles
+
+Remember to respond in a way that matches the user's level of understanding (${level}) and always in ${langName} language.`;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -29,31 +96,77 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const lowerMessage = message.toLowerCase().trim();
+    // Get API key from environment
+    const apiKey = process.env.GEMINI_API_KEY;
     
-    for (const [key, response] of Object.entries(mockResponses)) {
-      if (lowerMessage.includes(key)) {
-        return NextResponse.json({
-          text: response,
-          sources: ["Jainworld.com", "Tattvarth Sutra"],
-          confidence: 95,
-        });
-      }
+    if (!apiKey) {
+      console.error('GEMINI_API_KEY is not set in environment variables');
+      return NextResponse.json(
+        { 
+          error: 'API configuration error', 
+          text: "I apologize, but the chatbot service is not properly configured. Please contact support." 
+        },
+        { status: 500 }
+      );
     }
-    
-    const defaultResponse = mode === "beginner" 
-      ? "I'm here to help you learn about Jain philosophy! Try asking about:\n\n• What is Ahimsa?\n• Tell me about Mahavira\n• What is Jainism?\n• Explain Tirthankaras\n• What is Karma in Jainism?\n• How to achieve Moksha?\n• What are Vratas?\n• Jain meditation practices"
-      : "I'm still learning about Jain philosophy. Could you ask about specific topics like Ahimsa, Mahavira, Tirthankaras, Karma, Moksha, Vratas, or Meditation? I can provide detailed explanations on these topics.";
-    
+
+    // Initialize Gemini
+    const genAI = new GoogleGenerativeAI(apiKey);
+    // Using gemini-2ç.5-flash for better performance and lower latency
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+    // Get system prompt based on level and language
+    const systemPrompt = getSystemPrompt(mode, language);
+
+    // Create the full prompt
+    const fullPrompt = `${systemPrompt}
+
+User's question: ${message}
+
+Please provide a helpful, accurate response that matches the user's level of understanding and is entirely in ${languageMap[language] || 'English'} language.`;
+
+    // Generate response
+    const result = await model.generateContent(fullPrompt);
+    const response = await result.response;
+    const text = response.text();
+
+    // Return response
+    // Note: Gemini API doesn't provide sources or confidence scores
+    // These fields are excluded to avoid misleading users
     return NextResponse.json({
-      text: defaultResponse,
-      sources: [],
-      confidence: 60,
+      text: text,
     });
   } catch (error) {
     console.error('Chat API error:', error);
+    
+    // Handle specific Gemini API errors
+    if (error instanceof Error) {
+      if (error.message.includes('API_KEY')) {
+        return NextResponse.json(
+          { 
+            error: 'Invalid API key', 
+            text: "I apologize, but there's an authentication issue. Please check the API configuration." 
+          },
+          { status: 500 }
+        );
+      }
+      
+      if (error.message.includes('quota') || error.message.includes('rate limit')) {
+        return NextResponse.json(
+          { 
+            error: 'Rate limit exceeded', 
+            text: "I'm currently experiencing high demand. Please try again in a moment." 
+          },
+          { status: 429 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to generate response', text: "I apologize, but I'm having trouble processing your request right now. Please try again." },
+      { 
+        error: 'Failed to generate response', 
+        text: "I apologize, but I'm having trouble processing your request right now. Please try again later." 
+      },
       { status: 500 }
     );
   }
