@@ -653,6 +653,7 @@ export async function GET(request: NextRequest) {
           level: 1,
           totalQuizzesCompleted: 0,
           totalStoriesRead: 0,
+          completedSections: {},
         });
       }
       
@@ -667,7 +668,13 @@ export async function GET(request: NextRequest) {
           level: 1,
           totalQuizzesCompleted: 0,
           totalStoriesRead: 0,
+          completedSections: {},
         });
+      }
+      
+      // Ensure completedSections exists
+      if (!progress.completedSections) {
+        progress.completedSections = {};
       }
       
       return NextResponse.json(progress);
@@ -678,6 +685,7 @@ export async function GET(request: NextRequest) {
         level: 1,
         totalQuizzesCompleted: 0,
         totalStoriesRead: 0,
+        completedSections: {},
       });
     }
   }

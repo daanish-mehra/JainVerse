@@ -11,6 +11,8 @@ import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { FadeIn } from "@/components/animations/FadeIn";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarView } from "@/components/CalendarView";
+import { Input } from "@/components/ui/input";
+import { Send, ChefHat, Sparkles } from "lucide-react";
 
 interface Practice {
   id: number;
@@ -56,6 +58,9 @@ export default function PracticePage() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
+  const [recipeInput, setRecipeInput] = useState("");
+  const [recipeSuggestion, setRecipeSuggestion] = useState("");
+  const [isGeneratingRecipe, setIsGeneratingRecipe] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -213,6 +218,42 @@ export default function PracticePage() {
       }
     } catch (error) {
       console.error('Error saving reflection:', error);
+    }
+  };
+
+  const handleRecipeSubmit = async () => {
+    if (!recipeInput.trim() || isGeneratingRecipe) return;
+
+    const recipe = recipeInput.trim();
+    setRecipeInput("");
+    setIsGeneratingRecipe(true);
+    setRecipeSuggestion("");
+
+    try {
+      const response = await fetch('/api/practice/recipe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ recipe }),
+      });
+
+      const data = await response.json();
+
+      // Always show suggestion if available, even if success is false
+      if (data.suggestion) {
+        setRecipeSuggestion(data.suggestion);
+      } else if (response.ok && data.success) {
+        setRecipeSuggestion(data.suggestion || "Recipe converted successfully!");
+      } else {
+        setRecipeSuggestion(data.error || data.suggestion || "I'm having trouble generating recipe suggestions. Please try again.");
+      }
+    } catch (error) {
+      console.error('Error generating recipe suggestion:', error);
+      // Provide helpful fallback guide even on network errors
+      setRecipeSuggestion(`I encountered a network error. Here's a quick guide to make your recipe Jain-compliant:\n\n**Essential Substitutions:**\n- **Onion/Garlic** → Replace with asafoetida (hing) or curry leaves\n- **Potato** → Use tapioca or sweet potato (if above ground)\n- **Carrot** → Use bell peppers or tomatoes\n- **Vinegar** → Use lemon juice or tamarind\n\n**What to Avoid:**\n- Root vegetables: onion, garlic, potato, carrot, radish, beetroot, sweet potato\n- Animal products: meat, fish, eggs, any animal-derived ingredients\n- Honey (harms bees)\n- Fermented foods with vinegar\n\n**What to Use:**\n- Above-ground vegetables: tomatoes, peppers, eggplant, okra, spinach, cabbage\n- Grains: rice, wheat, quinoa, millet\n- Legumes: lentils, beans, chickpeas\n- Dairy: milk, paneer, ghee\n- Nuts and seeds\n\nPlease try again in a moment for a detailed conversion!`);
+    } finally {
+      setIsGeneratingRecipe(false);
     }
   };
 
@@ -567,6 +608,178 @@ export default function PracticePage() {
             />
           </DialogContent>
         </Dialog>
+
+        <ScrollReveal direction="up" delay={0.35}>
+          <Card className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-200 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold text-gray-900 flex items-center">
+                <ChefHat className="w-6 h-6 mr-3 text-amber-600" />
+                Jain Recipe Converter
+              </CardTitle>
+              <CardDescription className="text-gray-700 mt-2">
+                Enter any recipe and I'll suggest Jain-friendly alternatives and modifications!
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="relative">
+                  <Input
+                    value={recipeInput}
+                    onChange={(e) => setRecipeInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleRecipeSubmit();
+                      }
+                    }}
+                    placeholder="Paste your recipe here... (e.g., ingredients, steps, etc.)"
+                    className="pr-12 min-h-[100px] py-3 rounded-xl border-2 border-amber-200 focus:border-amber-400 focus:ring-amber-400"
+                    disabled={isGeneratingRecipe}
+                  />
+                  <Button
+                    onClick={handleRecipeSubmit}
+                    disabled={!recipeInput.trim() || isGeneratingRecipe}
+                    className="absolute bottom-2 right-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg px-4 py-2 h-auto"
+                  >
+                    {isGeneratingRecipe ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+                
+                {recipeSuggestion && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="p-5 rounded-xl bg-white border-2 border-amber-200 shadow-md"
+                  >
+                    <div className="flex items-start space-x-3 mb-3">
+                      <Sparkles className="w-5 h-5 text-amber-500 flex-shrink-0 mt-1" />
+                      <h3 className="font-bold text-lg text-gray-900">Jain-Friendly Recipe</h3>
+                    </div>
+                    <div className="text-gray-700 leading-relaxed space-y-3">
+                      {recipeSuggestion.split('\n\n').map((paragraph, pIdx) => {
+                        if (!paragraph.trim()) return null;
+                        
+                        // Check if paragraph is a header (starts with ** and ends with **)
+                        const trimmed = paragraph.trim();
+                        const isHeader = trimmed.startsWith('**') && trimmed.endsWith('**') && !trimmed.includes('\n');
+                        
+                        if (isHeader) {
+                          return (
+                            <h3 key={pIdx} className="font-bold text-lg text-gray-900 mb-2 mt-4 first:mt-0">
+                              {trimmed.replace(/\*\*/g, '')}
+                            </h3>
+                          );
+                        }
+                        
+                        // Process lines within paragraph
+                        const lines = paragraph.split('\n').filter(l => l.trim());
+                        return (
+                          <div key={pIdx} className="space-y-2">
+                            {lines.map((line, idx) => {
+                              // Check for bullet points
+                              if (line.trim().startsWith('-')) {
+                                const parts = line.split(/(\*\*[^*]+\*\*)/g);
+                                return (
+                                  <div key={idx} className="flex items-start space-x-2 ml-2">
+                                    <span className="text-amber-600 font-bold mt-1">•</span>
+                                    <span className="flex-1">
+                                      {parts.map((part, partIdx) => 
+                                        part.startsWith('**') && part.endsWith('**') ? (
+                                          <strong key={partIdx} className="font-semibold text-gray-900">{part.replace(/\*\*/g, '')}</strong>
+                                        ) : (
+                                          <span key={partIdx}>{part.replace(/^-\s*/, '')}</span>
+                                        )
+                                      )}
+                                    </span>
+                                  </div>
+                                );
+                              }
+                              
+                              // Check for numbered list
+                              if (/^\d+\./.test(line.trim())) {
+                                const parts = line.split(/(\*\*[^*]+\*\*)/g);
+                                return (
+                                  <div key={idx} className="flex items-start space-x-2 ml-2">
+                                    <span className="text-amber-600 font-semibold mt-0.5">{line.match(/^\d+\./)?.[0]}</span>
+                                    <span className="flex-1">
+                                      {parts.map((part, partIdx) => 
+                                        part.startsWith('**') && part.endsWith('**') ? (
+                                          <strong key={partIdx} className="font-semibold text-gray-900">{part.replace(/\*\*/g, '')}</strong>
+                                        ) : (
+                                          <span key={partIdx}>{part.replace(/^\d+\.\s*/, '')}</span>
+                                        )
+                                      )}
+                                    </span>
+                                  </div>
+                                );
+                              }
+                              
+                              // Regular text with bold formatting
+                              const parts = line.split(/(\*\*[^*]+\*\*)/g);
+                              if (parts.length > 1) {
+                                return (
+                                  <p key={idx} className="mb-1">
+                                    {parts.map((part, partIdx) => 
+                                      part.startsWith('**') && part.endsWith('**') ? (
+                                        <strong key={partIdx} className="font-semibold text-gray-900">{part.replace(/\*\*/g, '')}</strong>
+                                      ) : (
+                                        <span key={partIdx}>{part}</span>
+                                      )
+                                    )}
+                                  </p>
+                                );
+                              }
+                              
+                              return (
+                                <p key={idx} className="mb-1">
+                                  {line}
+                                </p>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <Button
+                      onClick={() => setRecipeSuggestion("")}
+                      variant="outline"
+                      size="sm"
+                      className="mt-4 w-full hover:bg-amber-50 border-amber-300"
+                    >
+                      Clear & Try Another Recipe
+                    </Button>
+                  </motion.div>
+                )}
+
+                {!recipeSuggestion && !isGeneratingRecipe && (
+                  <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm text-gray-600">
+                    <p className="font-semibold mb-2">💡 Tip:</p>
+                    <p>I'll help you convert any recipe to be Jain-compliant by:</p>
+                    <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
+                      <li>Replacing root vegetables (onion, garlic, potato) with alternatives</li>
+                      <li>Suggesting Jain-friendly substitutes for all ingredients</li>
+                      <li>Providing cooking tips specific to Jain preparation</li>
+                    </ul>
+                  </div>
+                )}
+
+                {isGeneratingRecipe && (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-center">
+                      <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                      <p className="text-sm text-gray-600">Converting your recipe to Jain-friendly version...</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </ScrollReveal>
 
         <ScrollReveal direction="up" delay={0.4}>
           <div className="relative">

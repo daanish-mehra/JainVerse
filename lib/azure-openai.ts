@@ -20,21 +20,48 @@ export function getAzureOpenAIClient(): OpenAI | null {
     const deploymentName = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "jainai-gpt4";
     
     let baseURL: string;
+    
+    // Handle Azure AI Foundry format (services.ai.azure.com)
     if (endpoint.includes("services.ai.azure.com")) {
-      baseURL = `${endpoint.replace(/\/$/, "")}/openai/deployments/${deploymentName}`;
+      // Azure AI Foundry format: https://{resource}.services.ai.azure.com/api/projects/{project}/openai/deployments/{deployment}
+      // Check if endpoint already includes the full path
+      if (endpoint.includes("/openai/deployments/")) {
+        // Endpoint already includes deployment in path - remove it from baseURL
+        // BaseURL should be: https://{resource}.services.ai.azure.com/api/projects/{project}/openai
+        // We'll pass the deployment name as the model parameter
+        baseURL = endpoint.replace(/\/deployments\/[^\/]*\/?$/, '').replace(/\/$/, "");
+        if (!baseURL.endsWith('/openai')) {
+          baseURL = baseURL + '/openai';
+        }
+        // Extract deployment name from endpoint if present
+        const deploymentMatch = endpoint.match(/\/deployments\/([^\/]+)/);
+        if (deploymentMatch) {
+          // If endpoint had deployment, we'll use it, otherwise use deploymentName
+          // But we'll still pass model in API calls
+        }
+      } else {
+        // Endpoint doesn't include deployment - add it
+        baseURL = `${endpoint.replace(/\/$/, "")}/openai/deployments/${deploymentName}`;
+      }
     } else if (endpoint.includes("openai.azure.com")) {
+      // Standard Azure OpenAI format
       baseURL = `${endpoint.replace(/\/$/, "")}/openai/deployments/${deploymentName}`;
     } else {
+      // Fallback: assume standard format
       baseURL = `${endpoint.replace(/\/$/, "")}/openai/deployments/${deploymentName}`;
     }
     
+    // For Azure OpenAI, we need to use api-key header instead of Authorization Bearer
+    // The OpenAI SDK for Azure requires special configuration
+    // If the endpoint doesn't include /deployments/, the baseURL should not include it either
+    // The model parameter in API calls should be the deployment name
     azureOpenAI = new OpenAI({
-      apiKey,
-      baseURL,
+      apiKey: apiKey,
+      baseURL: baseURL,
       defaultQuery: { "api-version": apiVersion },
-      defaultHeaders: { 
+      // Explicitly set api-key header for Azure (the SDK should handle this automatically)
+      defaultHeaders: {
         "api-key": apiKey,
-        "Content-Type": "application/json"
       },
     });
     

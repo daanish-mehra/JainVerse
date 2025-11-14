@@ -78,7 +78,8 @@ export default function ChatPage() {
 
       const data = await response.json();
 
-      if (response.ok) {
+      // Always show the response if data.text exists, even if status is not 200
+      if (data.text || data.message) {
         const botMessage: Message = {
           id: botMessageId,
           type: "bot",
@@ -89,7 +90,7 @@ export default function ChatPage() {
           action: data.action,
         };
         setMessages((prev) => [...prev, botMessage]);
-      } else {
+      } else if (!response.ok) {
         const errorMessage: Message = {
           id: botMessageId,
           type: "bot",

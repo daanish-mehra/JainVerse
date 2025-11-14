@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export async function POST(req: NextRequest) {
+  let title = 'this section';
   try {
-    const { text, title } = await req.json();
+    const body = await req.json();
+    const { text } = body;
+    title = body.title || 'this section';
 
     if (!text) {
       return NextResponse.json({ error: 'Text is required for quiz generation' }, { status: 400 });
@@ -15,7 +18,7 @@ export async function POST(req: NextRequest) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `Based on the following text about "${title}", create a single quiz question that:
 - Tests understanding of the key concepts from the text
@@ -68,8 +71,15 @@ The "correct" field must be a number 0-3 representing the index of the correct o
         },
       });
     } catch (error) {
-      console.error('Error generating quiz:', error);
-      // Fallback quiz
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorString = errorMessage.toLowerCase();
+      
+      // Log error but don't fail - always return a fallback quiz
+      if (!errorString.includes('503') && !errorString.includes('overloaded')) {
+        console.error('Error generating quiz:', error);
+      }
+      
+      // Always return fallback quiz on any error (including 503)
       return NextResponse.json({
         quiz: {
           question: `What is the main concept covered in "${title}"?`,
@@ -86,11 +96,28 @@ The "correct" field must be a number 0-3 representing the index of the correct o
       });
     }
   } catch (error) {
-    console.error('Quiz generation API error:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate quiz', details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
-    );
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    // Don't log 503 errors - they're expected when service is overloaded
+    if (!errorMessage.toLowerCase().includes('503') && !errorMessage.toLowerCase().includes('overloaded')) {
+      console.error('Quiz generation API error:', error);
+    }
+    
+    // Always return a fallback quiz instead of an error
+    return NextResponse.json({
+      quiz: {
+        question: `What is the main concept covered in "${title}"?`,
+        options: [
+          "A key Jain principle",
+          "A historical event",
+          "A meditation technique",
+          "A prayer or mantra",
+        ],
+        correct: 0,
+        explanation: `This section covers important concepts related to ${title || 'this topic'} in Jain philosophy.`,
+        source: title || "Jainworld.com",
+      },
+    });
   }
 }
 

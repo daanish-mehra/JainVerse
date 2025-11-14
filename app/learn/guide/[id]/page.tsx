@@ -14,10 +14,13 @@ export default function GuidePage() {
   const router = useRouter();
   const guideId = params.id as string;
   const [guide, setGuide] = useState<any>(null);
+  const [completedSections, setCompletedSections] = useState<Set<number>>(new Set());
+  const [progress, setProgress] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchGuide();
+    fetchProgress();
   }, [guideId]);
 
   const fetchGuide = async () => {
@@ -32,6 +35,45 @@ export default function GuidePage() {
       setLoading(false);
     }
   };
+
+  const fetchProgress = async () => {
+    try {
+      const response = await fetch('/api/learn?type=progress');
+      if (response.ok) {
+        const data = await response.json();
+        setProgress(data);
+        
+        // Extract completed sections for this guide
+        if (data.completedSections) {
+          const completed = new Set<number>();
+          const sectionKeyPrefix = `guide-${guideId}-section-`;
+          
+          Object.keys(data.completedSections).forEach((key) => {
+            if (key.startsWith(sectionKeyPrefix)) {
+              const sectionId = parseInt(key.replace(sectionKeyPrefix, ''));
+              if (!isNaN(sectionId)) {
+                completed.add(sectionId);
+              }
+            }
+          });
+          
+          setCompletedSections(completed);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching progress:", error);
+    }
+  };
+
+  // Refresh progress when returning to this page
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchProgress();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [guideId]);
 
   if (loading) {
     return (
@@ -97,20 +139,34 @@ export default function GuidePage() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="font-medium text-gray-700">Progress</span>
-                  <span className="font-bold text-saffron-600">{guide.progress}%</span>
+                  <span className="font-bold text-saffron-600">
+                    {guide.modules && guide.modules.length > 0
+                      ? Math.round((completedSections.size / guide.modules.length) * 100)
+                      : guide.progress || 0}%
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${guide.progress}%` }}
+                    animate={{ 
+                      width: `${guide.modules && guide.modules.length > 0
+                        ? (completedSections.size / guide.modules.length) * 100
+                        : guide.progress || 0}%` 
+                    }}
                     transition={{ duration: 1, ease: "easeOut" }}
                     className="bg-gradient-to-r from-saffron-400 via-gold-400 to-saffron-500 h-3 rounded-full"
                   />
                 </div>
                 <div className="flex items-center justify-between text-xs text-gray-500 mt-2">
                   <span>🏅 {guide.badges}/{guide.totalBadges} Badges</span>
-                  <span>{guide.modules?.length || 0} Sections</span>
+                  <span>{completedSections.size}/{guide.modules?.length || 0} Sections Completed</span>
                 </div>
+                {progress && (
+                  <div className="flex items-center justify-between text-xs text-gray-600 mt-2 pt-2 border-t border-gray-200">
+                    <span>✨ {progress.punyaPoints || 0} Punya Points</span>
+                    <span>Level {progress.level || 1}</span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -137,16 +193,29 @@ export default function GuidePage() {
                             <CardContent className="p-6">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-4 flex-1">
-                                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-saffron-400 to-gold-500 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
-                                    {sectionId}
-                                  </div>
+                                  {completedSections.has(sectionId) ? (
+                                    <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center flex-shrink-0">
+                                      <CheckCircle className="w-6 h-6" />
+                                    </div>
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-saffron-400 to-gold-500 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
+                                      {sectionId}
+                                    </div>
+                                  )}
                                   <div className="flex-1">
-                                    <h3 className="font-bold text-lg text-gray-900">
+                                    <h3 className={`font-bold text-lg ${
+                                      completedSections.has(sectionId) ? 'text-green-700' : 'text-gray-900'
+                                    }`}>
                                       {module}
                                     </h3>
+                                    {completedSections.has(sectionId) && (
+                                      <p className="text-sm text-green-600 mt-1">✓ Completed</p>
+                                    )}
                                   </div>
                                 </div>
-                                <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                                <ChevronRight className={`w-5 h-5 flex-shrink-0 ${
+                                  completedSections.has(sectionId) ? 'text-green-500' : 'text-gray-400'
+                                }`} />
                               </div>
                             </CardContent>
                           </Card>

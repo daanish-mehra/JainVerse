@@ -124,9 +124,9 @@ export default function HomePage() {
     <div className="min-h-screen pb-20 bg-gradient-to-b from-white via-ivory-50 to-white">
       <div className="relative">
         <motion.div
-          initial={{ opacity: 0, scale: 1.1 }}
+          initial={{ opacity: 1, scale: 1 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="relative min-h-screen flex flex-col items-center justify-center px-6 py-20 bg-gradient-to-br from-saffron-50 via-white to-gold-50 overflow-hidden"
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(245,176,65,0.1),transparent_50%)]" />
@@ -134,33 +134,33 @@ export default function HomePage() {
           
           <div className="relative z-10 max-w-4xl mx-auto text-center space-y-8">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 1, y: 0 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
+              transition={{ duration: 0.3 }}
               className="space-y-6"
             >
               <motion.h1
-                initial={{ opacity: 0 }}
+                initial={{ opacity: 1 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
+                transition={{ duration: 0.3 }}
                 className="text-5xl sm:text-6xl md:text-7xl font-bold font-display mb-4 bg-gradient-to-r from-saffron-600 via-gold-500 to-saffron-600 bg-clip-text text-transparent leading-tight"
               >
                 JainAI
               </motion.h1>
               
               <motion.p
-                initial={{ opacity: 0 }}
+                initial={{ opacity: 1 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 1, delay: 1.5 }}
+                transition={{ duration: 0.3 }}
                 className="text-lg sm:text-xl md:text-2xl text-gray-700 font-light leading-relaxed px-2"
               >
                 Where Ancient Wisdom Meets Modern AI
               </motion.p>
 
                       <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 1, y: 0 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 2 }}
+                        transition={{ duration: 0.3 }}
                         className="pt-6"
                       >
                         {greeting && (
@@ -176,9 +176,9 @@ export default function HomePage() {
                       </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 2.5 }}
+                transition={{ duration: 0.3 }}
                 className="pt-8"
               >
                 <motion.div

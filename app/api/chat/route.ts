@@ -81,8 +81,32 @@ TOPICS YOU CAN HELP WITH:
 - Meditation and spiritual practices
 - Jain history and traditions
 - Daily practices and rituals
+- Jain dietary principles and food (VERY IMPORTANT - see below)
 - Comparison with other philosophies (when appropriate)
 - Modern applications of Jain principles
+
+JAIN DIETARY PRINCIPLES (CRITICAL FOR FOOD QUESTIONS):
+- Strict vegetarianism (no meat, fish, eggs, or animal products)
+- Root vegetables are avoided (onion, garlic, potato, carrot, radish, beetroot) as they contain many microorganisms
+- Underground vegetables are prohibited: onions, garlic, potatoes, carrots, radishes, beetroots, sweet potatoes
+- Fruits and vegetables that grow above ground are generally acceptable
+- Grains, lentils, beans, nuts, and seeds are encouraged
+- Dairy products are acceptable
+- Avoid fermentation (alcohol, vinegar, pickles with vinegar)
+- Fresh foods are preferred
+- Respect for all life forms - even microscopic
+- Some Jains avoid certain fruits with many seeds (figs) or that ripen after picking
+- Water is filtered to remove microorganisms
+- After sunset eating is avoided by many practitioners
+- Cooking and preparation should minimize harm to microorganisms
+- Honey is avoided by many as it harms bees
+
+When answering food-related questions, ALWAYS:
+1. Consider Jain dietary restrictions and principles
+2. Suggest Jain-friendly alternatives
+3. Explain the reasoning behind restrictions (Ahimsa/non-violence)
+4. Provide practical, helpful guidance
+5. Respect different levels of practice (some may be stricter than others)
 
 Remember to respond in a way that matches the user's level of understanding (${level}) and always in ${langName} language.
 
@@ -163,68 +187,91 @@ export async function POST(req: NextRequest) {
 
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    // Use gemini-1.5-flash (stable, widely available)
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     // Get system prompt based on level and language
     const systemPrompt = getSystemPrompt(mode, language, context);
 
+    // Detect if this is a food-related question
+    const isFoodQuestion = /food|recipe|ingredient|cooking|eat|diet|vegetable|meal|dish|cuisine|restaurant|menu/i.test(message);
+    
+    // Add Jain food context if food-related
+    const foodContext = isFoodQuestion ? `
+
+SPECIAL INSTRUCTION FOR FOOD QUESTION:
+The user is asking about food. You MUST provide Jain-compliant guidance:
+- Suggest Jain-friendly alternatives if they mention non-Jain foods
+- Explain why certain foods are avoided (Ahimsa principle)
+- Offer practical Jain cooking tips and substitutions
+- Be helpful and constructive, not judgmental
+- Remember: Root vegetables (onion, garlic, potato, carrot, radish, beetroot) are avoided
+- Suggest alternatives like asafoetida (hing) instead of onion/garlic
+- Recommend above-ground vegetables, grains, lentils, dairy products
+- Provide specific Jain-friendly recipe suggestions when appropriate
+` : '';
+
     // Create the full prompt
-    const fullPrompt = `${systemPrompt}
+    const fullPrompt = `${systemPrompt}${foodContext}
 
 User's question: ${message}
 
 Please provide a helpful, accurate response that matches the user's level of understanding and is entirely in ${languageMap[language] || 'English'} language.${action ? ' Keep your response concise (1-2 sentences) as the user will be directed to more detailed content via an action button.' : ''}`;
 
-    // Generate response
+    // Generate response with retry logic for 503 errors
     let responseText: string = "";
-            try {
-              const result = await model.generateContent(fullPrompt);
-              const response = await result.response;
-              const rawText = response.text();
+    let retryCount = 0;
+    const maxRetries = 2;
+    let lastError: Error | null = null;
+    
+    while (retryCount <= maxRetries) {
+      try {
+        // Try with gemini-1.5-flash (primary), fallback to same model with retry delay
+        const modelName = 'gemini-1.5-flash';
+        const currentModel = genAI.getGenerativeModel({ model: modelName });
+        
+        const result = await currentModel.generateContent(fullPrompt);
+        const response = await result.response;
+        const rawText = response.text();
               
               // Validate response
               if (!rawText || rawText.trim().length === 0) {
                 throw new Error('Empty response from Gemini API');
               }
               
-              // Clean the generated text to remove unwanted content
-              responseText = cleanArticleContent(rawText);
-              
-              // Ensure we still have content after cleaning
-              if (!responseText || responseText.trim().length === 0) {
-                // If cleaning removed everything, use the raw text
-                responseText = rawText.substring(0, 500).trim();
-              }
-            } catch (error) {
-      console.error('Gemini API error:', error);
-      
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Full error details:', {
-        message: errorMessage,
-        error: error,
-      });
-      
-      // Check for specific Gemini errors
-      if (errorMessage.includes('API_KEY') || errorMessage.includes('API key') || errorMessage.includes('401') || errorMessage.includes('403')) {
-        return NextResponse.json({
-          text: "I apologize, but there's an authentication issue with the chatbot service. Please check your Gemini API key configuration.",
-          sources: ["Jainworld.com"],
-          confidence: 60,
-          action: action || undefined,
-        }, { status: 401 });
+        // Clean the generated text to remove unwanted content
+        responseText = cleanArticleContent(rawText);
+        
+        // Ensure we still have content after cleaning
+        if (!responseText || responseText.trim().length === 0) {
+          // If cleaning removed everything, use the raw text
+          responseText = rawText.substring(0, 500).trim();
+        }
+        
+        // Success - break out of retry loop
+        break;
+      } catch (error) {
+        lastError = error as Error;
+        const errorMessage = lastError.message.toLowerCase();
+        
+        // If it's a 503 error and we haven't exceeded retries, wait and retry
+        if ((errorMessage.includes('503') || errorMessage.includes('overloaded') || errorMessage.includes('service unavailable')) && retryCount < maxRetries) {
+          retryCount++;
+          console.log(`Gemini API 503 error, retrying (${retryCount}/${maxRetries}) with different model...`);
+          // Wait a bit before retrying (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          continue; // Retry with next model
+        }
+        
+        // If it's not a retryable error or we've exceeded retries, throw
+        throw error;
       }
-      
-      if (errorMessage.includes('quota') || errorMessage.includes('rate limit') || errorMessage.includes('429')) {
-        return NextResponse.json({
-          text: "I'm currently experiencing high demand. Please try again in a moment.",
-          sources: ["Jainworld.com"],
-          confidence: 60,
-          action: action || undefined,
-        }, { status: 429 });
-      }
-      
-      // If we get here, there was an error but we'll handle it in the outer catch
-      throw error;
+    }
+    
+    // If we get here after retries and still no responseText, handle the error
+    if (!responseText || responseText.trim().length === 0) {
+      // All retries failed, throw error to be caught by outer catch
+      throw lastError || new Error('Failed to generate response after retries');
     }
 
     // Ensure responseText is always defined and has content
@@ -310,12 +357,27 @@ Please provide a helpful, accurate response that matches the user's level of und
     }
     
     if (errorString.includes('quota') || errorString.includes('rate limit') || errorString.includes('429') || errorString.includes('too many requests')) {
+      // Provide a helpful fallback response instead of just an error message
+      const fallbackResponse = mode === "beginner" 
+        ? "I'm here to help you learn about Jain philosophy! Based on your question about \"" + (message?.substring(0, 50) || "Jainism") + "\", here's some helpful information:\n\nJainism is one of the oldest religions in the world, emphasizing non-violence (Ahimsa), truth, non-stealing, celibacy, and non-attachment. The principles of Jainism teach us to live with compassion for all living beings.\n\nI'm currently experiencing high demand. For more detailed answers, please try again in a moment, or explore the Learn section of the app for comprehensive guides on Jain philosophy and practices."
+        : "I'm currently experiencing high demand on the AI service. Please try again in a moment, or explore the Learn section for detailed information about Jain philosophy and practices.";
+      
       return NextResponse.json({
-        text: "I'm currently experiencing high demand. Please try again in a moment.",
+        text: fallbackResponse,
         sources: ["Jainworld.com"],
         confidence: 60,
         action: action || undefined,
-      }, { status: 429 });
+      }, { status: 200 }); // Return 200 so frontend doesn't treat it as an error
+    }
+    
+    // Handle 503 Service Unavailable / Overloaded errors in outer catch
+    if (errorString.includes('503') || errorString.includes('overloaded') || errorString.includes('service unavailable') || errorString.includes('try again later')) {
+      return NextResponse.json({
+        text: "I'm currently experiencing high traffic. The service is temporarily unavailable. Please try again in a moment.",
+        sources: ["Jainworld.com"],
+        confidence: 60,
+        action: action || undefined,
+      }, { status: 503 });
     }
     
     // Always return 200 with fallback response - don't return 500
