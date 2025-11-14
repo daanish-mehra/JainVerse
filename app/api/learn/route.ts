@@ -544,8 +544,81 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // Fallback: return empty quizzes instead of generating (slow)
-    return NextResponse.json({ quizzes: [] }, {
+    // Fallback: return default quizzes
+    const defaultQuizzes = [
+      {
+        id: 1,
+        question: "What is the main principle of Jainism?",
+        options: [
+          "Ahimsa (Non-violence)",
+          "Karma",
+          "Dharma",
+          "Moksha"
+        ],
+        correct: 0,
+        explanation: "Ahimsa, or non-violence, is the fundamental principle of Jainism. It means avoiding harm to all living beings, including microscopic organisms.",
+        source: "Jainworld.com",
+        topic: "Jain Principles"
+      },
+      {
+        id: 2,
+        question: "Who was Lord Mahavira?",
+        options: [
+          "The 24th and last Tirthankara",
+          "A Hindu deity",
+          "A Buddhist monk",
+          "A king from ancient India"
+        ],
+        correct: 0,
+        explanation: "Lord Mahavira, also known as Vardhamana, was the 24th and last Tirthankara (spiritual teacher) of Jainism. He attained perfect knowledge at the age of 42 and taught Jain principles for 30 years.",
+        source: "Jainworld.com",
+        topic: "Jain History"
+      },
+      {
+        id: 3,
+        question: "What does 'Anekantvad' mean in Jainism?",
+        options: [
+          "Multiple viewpoints or non-absolutism",
+          "Single truth",
+          "Eternal soul",
+          "The path to liberation"
+        ],
+        correct: 0,
+        explanation: "Anekantvad is the Jain doctrine of non-absolutism. It teaches that truth and reality can be perceived differently from different viewpoints, and all perspectives are valid in their own context.",
+        source: "Jainworld.com",
+        topic: "Jain Philosophy"
+      },
+      {
+        id: 4,
+        question: "Which vegetables are typically avoided in Jain diet?",
+        options: [
+          "Root vegetables like onions and potatoes",
+          "Leafy vegetables",
+          "Fruits",
+          "Grains and legumes"
+        ],
+        correct: 0,
+        explanation: "Jains avoid root vegetables like onions, garlic, potatoes, and carrots because they contain many microscopic organisms. Above-ground vegetables are preferred.",
+        source: "Jainworld.com",
+        topic: "Jain Practices"
+      },
+      {
+        id: 5,
+        question: "What is 'Aparigraha' in Jainism?",
+        options: [
+          "Non-attachment and non-possession",
+          "Non-violence",
+          "Truthfulness",
+          "Celibacy"
+        ],
+        correct: 0,
+        explanation: "Aparigraha is one of the five main vows in Jainism. It means non-attachment to worldly possessions and avoiding greed and hoarding.",
+        source: "Jainworld.com",
+        topic: "Jain Principles"
+      }
+    ];
+    
+    return NextResponse.json({ quizzes: defaultQuizzes }, {
       headers: {
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
       },
