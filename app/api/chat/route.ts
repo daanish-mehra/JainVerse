@@ -187,8 +187,8 @@ export async function POST(req: NextRequest) {
 
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Use gemini-1.5-flash (stable, widely available)
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    // Use gemini-2.5-flash-preview (available for this API key)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
 
     // Get system prompt based on level and language
     const systemPrompt = getSystemPrompt(mode, language, context);
@@ -226,8 +226,8 @@ Please provide a helpful, accurate response that matches the user's level of und
     
     while (retryCount <= maxRetries) {
       try {
-        // Try with gemini-1.5-flash (primary), fallback to same model with retry delay
-        const modelName = 'gemini-1.5-flash';
+        // Try with gemini-2.5-flash-preview (available for this API key)
+        const modelName = 'gemini-2.5-flash-preview-05-20';
         const currentModel = genAI.getGenerativeModel({ model: modelName });
         
         const result = await currentModel.generateContent(fullPrompt);

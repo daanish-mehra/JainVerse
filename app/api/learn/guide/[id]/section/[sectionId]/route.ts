@@ -188,7 +188,7 @@ async function getSectionData(guideId: number, sectionId: number) {
         const apiKey = process.env.GEMINI_API_KEY;
         if (apiKey) {
           const genAI = new GoogleGenerativeAI(apiKey);
-          const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+          const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
           
           const prompt = `You are writing a detailed, engaging explanation about "${moduleTitle}" in Jainism. This must be UNIQUE and SPECIFIC to this exact topic - do NOT use generic phrases like "is an important aspect" or "explores fundamental concepts."
 
@@ -438,7 +438,7 @@ Begin your response directly with content about "${moduleTitle}" - no generic in
         const apiKey = process.env.GEMINI_API_KEY;
         if (apiKey) {
           const genAI = new GoogleGenerativeAI(apiKey);
-          const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+          const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
           
           const prompt = `Provide a clear, concise explanation about "${moduleTitle}" in Jainism (200-300 words).
 
@@ -557,7 +557,7 @@ Topic: ${moduleTitle}`;
         const apiKey = process.env.GEMINI_API_KEY;
         if (apiKey && summary && summary.length > 100) {
           const genAI = new GoogleGenerativeAI(apiKey);
-          const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+          const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
           
           const remainingQuizzes = 2 - quizzesArray.length;
           const quizPromises = [];

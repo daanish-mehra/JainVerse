@@ -37,7 +37,7 @@ export async function generateStoryFromArticle(article: {
     return null;
   }
 
-  const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
   const age = article.age || '8-12 years';
   
   const prompt = `Based on the following Jain article, create an engaging story suitable for ${age} year olds.
@@ -95,7 +95,7 @@ export async function generateMoralDilemmaFromArticle(article: {
     return null;
   }
 
-  const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
   
   const prompt = `Based on the following Jain article, create a moral dilemma suitable for ages 10+.
 
@@ -144,7 +144,7 @@ export async function generateSummaryFromArticle(article: {
     return null;
   }
 
-  const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
   
   const prompt = `Based on the following Jain article, create a clear and concise summary that:
 - Is 200-300 words long
@@ -183,7 +183,7 @@ export async function generateQuizFromArticle(article: {
     return null;
   }
 
-  const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
   
   const prompt = `Based on the following Jain article, create a single quiz question that:
 - Tests understanding of the key concepts from the article

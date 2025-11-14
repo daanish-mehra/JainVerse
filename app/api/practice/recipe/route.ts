@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Try multiple model names as fallback (same as other parts of app)
-    const modelNames = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro'];
+    // Use available models for this API key (2.5 preview models)
+    const modelNames = ['gemini-2.5-flash-preview-05-20', 'gemini-2.5-pro-preview-03-25'];
 
     const prompt = `You are a Jain culinary expert. A user wants to make a recipe Jain-compliant.
 
@@ -55,20 +55,15 @@ ${recipe}
 ${JAIN_DIETARY_GUIDELINES}
 
 TASK:
-1. Identify any non-Jain ingredients in the recipe
-2. Provide Jain-friendly alternatives for each non-Jain ingredient
-3. Rewrite the recipe with Jain substitutions
-4. Explain why certain ingredients were changed (refer to Ahimsa principle)
-5. Provide cooking tips specific to Jain cooking
-6. Ensure the final recipe is fully Jain-compliant
+Convert this recipe to be Jain-compliant. Keep your response SHORT and CONCISE.
 
-FORMAT YOUR RESPONSE:
-- Start with a brief summary of changes needed
-- List each non-Jain ingredient and its Jain alternative
-- Provide the complete modified recipe
-- Include any special cooking notes for Jain preparation
+FORMAT YOUR RESPONSE (be brief):
+1. **Non-Jain Ingredients & Substitutions:** List each non-Jain ingredient and its Jain alternative (one line each)
+2. **Modified Recipe:**
+   - Ingredients (list only)
+   - Preparation/Instructions (keep it short, step-by-step)
 
-Be helpful, practical, and respectful. Focus on making delicious Jain food that honors the principle of Ahimsa.`;
+Keep explanations minimal - focus on the ingredients and cooking steps. Maximum 300 words total.`;
 
     // Try multiple models with retry logic
     let lastError: Error | null = null;
