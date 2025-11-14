@@ -50,7 +50,7 @@ export function ScrollReveal({
     <motion.div
       ref={ref}
       initial="hidden"
-      animate={controls}
+      animate={isInView ? "visible" : "hidden"}
       variants={variants}
       className={className}
     >
