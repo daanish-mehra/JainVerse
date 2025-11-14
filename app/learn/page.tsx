@@ -260,8 +260,8 @@ export default function LearnPage() {
                   Test your knowledge with today's quiz
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {quizzes.map((quiz) => (
+              <CardContent className="space-y-8">
+                {quizzes.slice(0, 5).map((quiz) => (
                   <motion.div
                     key={quiz.id}
                     initial={{ opacity: 0, y: 20 }}

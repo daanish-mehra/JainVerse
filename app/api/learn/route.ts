@@ -235,14 +235,18 @@ function getDefaultLearningPaths() {
 
 async function generateQuizzesFromArticles(): Promise<any[]> {
   try {
-    const container = await getContainer("quizzes").catch(() => null);
+    const container = await getContainer("quizzes");
     if (container) {
-      const { resources } = await container.items.query({
-        query: "SELECT TOP 10 * FROM c ORDER BY c.createdAt DESC",
-      }).fetchAll();
-      
-      if (resources.length >= 5) {
-        return resources.map((q, idx) => ({ ...q, id: q.id || idx + 1 }));
+      try {
+        const { resources } = await container.items.query({
+          query: "SELECT TOP 10 * FROM c ORDER BY c.createdAt DESC",
+        }).fetchAll();
+        
+        if (resources.length >= 5) {
+          return resources.map((q, idx) => ({ ...q, id: q.id || idx + 1 }));
+        }
+      } catch (error) {
+        console.warn("Failed to query quizzes from Cosmos DB:", error);
       }
     }
     
@@ -281,7 +285,11 @@ async function generateQuizzesFromArticles(): Promise<any[]> {
           quizzes.push(quizData);
           
           if (container) {
-            await container.items.upsert(quizData).catch(() => {});
+            try {
+              await container.items.upsert(quizData);
+            } catch (error) {
+              console.warn("Failed to save quiz to Cosmos DB:", error);
+            }
           }
         }
       } catch (error) {
@@ -458,8 +466,29 @@ export async function GET(request: NextRequest) {
 
   if (type === "achievements") {
     try {
-      const progressRes = await fetch(`${request.nextUrl.origin}/api/learn/progress`);
-      const progressData = await progressRes.json();
+      const container = await getContainer("userProgress");
+      let progressData = {
+        totalQuizzesCompleted: 0,
+        totalStoriesRead: 0,
+        learningPathsCompleted: 0,
+        punyaPoints: 0,
+        level: 1,
+      };
+      
+      if (container) {
+        try {
+          const userId = "default-user";
+          const { resource: progress } = await container.item(userId, userId).read().catch(() => ({
+            resource: null,
+          }));
+          
+          if (progress) {
+            progressData = progress;
+          }
+        } catch (error) {
+          console.warn("Failed to fetch progress for achievements:", error);
+        }
+      }
       
       const allAchievements = [
         { id: 1, title: "First Steps", icon: "🌱", description: "Complete your first quiz", earned: (progressData.totalQuizzesCompleted || 0) > 0 },
@@ -474,16 +503,40 @@ export async function GET(request: NextRequest) {
       
       return NextResponse.json({ achievements: allAchievements });
     } catch (error) {
+      console.error("Achievements API error:", error);
       return NextResponse.json({ achievements: mockAchievements });
     }
   }
 
   if (type === "progress") {
     try {
-      const progressRes = await fetch(`${request.nextUrl.origin}/api/learn/progress`);
-      const progressData = await progressRes.json();
-      return NextResponse.json(progressData);
+      const container = await getContainer("userProgress");
+      if (!container) {
+        return NextResponse.json({
+          punyaPoints: 0,
+          level: 1,
+          totalQuizzesCompleted: 0,
+          totalStoriesRead: 0,
+        });
+      }
+      
+      const userId = "default-user";
+      const { resource: progress } = await container.item(userId, userId).read().catch(() => ({
+        resource: null,
+      }));
+      
+      if (!progress) {
+        return NextResponse.json({
+          punyaPoints: 0,
+          level: 1,
+          totalQuizzesCompleted: 0,
+          totalStoriesRead: 0,
+        });
+      }
+      
+      return NextResponse.json(progress);
     } catch (error) {
+      console.error("Progress fetch error:", error);
       return NextResponse.json({
         punyaPoints: 0,
         level: 1,
@@ -526,11 +579,36 @@ export async function POST(request: NextRequest) {
       
       if (isCorrect) {
         try {
-          await fetch(`${request.nextUrl.origin}/api/learn/progress`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "quiz-completed", quizId, points }),
-          });
+          const container = await getContainer("userProgress");
+          if (container) {
+            const userId = "default-user";
+            let { resource: progress } = await container.item(userId, userId).read().catch(() => ({
+              resource: null,
+            }));
+            
+            if (!progress) {
+              progress = {
+                id: userId,
+                punyaPoints: 0,
+                level: 1,
+                totalQuizzesCompleted: 0,
+                totalStoriesRead: 0,
+                learningPathsCompleted: 0,
+                achievementsUnlocked: 0,
+                quizHistory: [],
+                pathProgress: {},
+                achievements: [],
+              };
+            }
+            
+            progress.totalQuizzesCompleted = (progress.totalQuizzesCompleted || 0) + 1;
+            progress.punyaPoints = (progress.punyaPoints || 0) + points;
+            if (!progress.quizHistory) progress.quizHistory = [];
+            progress.quizHistory.push({ quizId, points, completedAt: new Date().toISOString() });
+            progress.level = Math.floor((progress.punyaPoints || 0) / 100) + 1;
+            
+            await container.items.upsert(progress);
+          }
         } catch (error) {
           console.error("Failed to update progress:", error);
         }

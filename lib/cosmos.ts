@@ -23,14 +23,39 @@ export async function getDatabase(): Promise<Database> {
   return database;
 }
 
-export async function getContainer(containerId: string): Promise<Container> {
+export async function getContainer(containerId: string): Promise<Container | null> {
   if (!client) {
-    throw new Error('Azure Cosmos DB credentials not configured');
+    return null;
   }
   
-  const database = await getDatabase();
-  const container = database.container(containerId);
-  return container;
+  try {
+    const database = await getDatabase();
+    
+    // Try to get container, create if it doesn't exist
+    try {
+      const container = database.container(containerId);
+      await container.read();
+      return container;
+    } catch (error: any) {
+      // Container doesn't exist, create it
+      if (error.code === 404) {
+        try {
+          const { container } = await database.containers.createIfNotExists({
+            id: containerId,
+            partitionKey: { paths: ["/id"] },
+          });
+          return container;
+        } catch (createError) {
+          console.error(`Failed to create container ${containerId}:`, createError);
+          return null;
+        }
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.error(`Error getting container ${containerId}:`, error);
+    return null;
+  }
 }
 
 export interface Quote {

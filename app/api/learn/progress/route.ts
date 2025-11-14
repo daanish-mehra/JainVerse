@@ -6,6 +6,17 @@ export async function GET(request: NextRequest) {
     const userId = "default-user";
     const container = await getContainer("userProgress");
     
+    if (!container) {
+      return NextResponse.json({
+        punyaPoints: 0,
+        level: 1,
+        totalQuizzesCompleted: 0,
+        totalStoriesRead: 0,
+        learningPathsCompleted: 0,
+        achievementsUnlocked: 0,
+      });
+    }
+    
     const { resource: progress } = await container.item(userId, userId).read().catch(() => ({
       resource: null,
     }));
@@ -29,6 +40,8 @@ export async function GET(request: NextRequest) {
       level: 1,
       totalQuizzesCompleted: 0,
       totalStoriesRead: 0,
+      learningPathsCompleted: 0,
+      achievementsUnlocked: 0,
     });
   }
 }
@@ -39,6 +52,10 @@ export async function POST(request: NextRequest) {
     const { action, quizId, pathId, storyId, points, achievementId } = body;
     const userId = "default-user";
     const container = await getContainer("userProgress");
+    
+    if (!container) {
+      return NextResponse.json({ error: "Database not available" }, { status: 503 });
+    }
     
     let { resource: progress } = await container.item(userId, userId).read().catch(() => ({
       resource: null,
