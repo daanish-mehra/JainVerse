@@ -21,8 +21,15 @@ export function Typewriter({
   const [displayedText, setDisplayedText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     const startTimeout = setTimeout(() => {
       setCurrentIndex(0);
       setDisplayedText("");
@@ -30,9 +37,11 @@ export function Typewriter({
     }, delay);
 
     return () => clearTimeout(startTimeout);
-  }, [delay, text]);
+  }, [delay, text, mounted]);
 
   useEffect(() => {
+    if (!mounted) return;
+
     if (currentIndex < text.length && displayedText.length === currentIndex) {
       const timeout = setTimeout(() => {
         setDisplayedText((prev) => prev + text[currentIndex]);
@@ -44,7 +53,11 @@ export function Typewriter({
       setIsComplete(true);
       onComplete?.();
     }
-  }, [currentIndex, text, speed, isComplete, onComplete, displayedText]);
+  }, [currentIndex, text, speed, isComplete, onComplete, displayedText, mounted]);
+
+  if (!mounted) {
+    return <span className={className}>{text}</span>;
+  }
 
   return (
     <motion.span
@@ -52,6 +65,7 @@ export function Typewriter({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
+      suppressHydrationWarning
     >
       {displayedText}
       {!isComplete && (

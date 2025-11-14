@@ -74,7 +74,9 @@ const quickActions = [
 ];
 
 export default function HomePage() {
-  const [dailyWisdom, setDailyWisdom] = useState<DailyQuote>(getRandomQuote());
+  const [dailyWisdom, setDailyWisdom] = useState<DailyQuote | null>(null);
+  const [currentTime, setCurrentTime] = useState<string>("");
+  const [greeting, setGreeting] = useState<string>("");
 
   useEffect(() => {
     const fetchQuote = async () => {
@@ -87,6 +89,8 @@ export default function HomePage() {
             author: data.author,
             explanation: data.explanation,
           });
+        } else {
+          setDailyWisdom(getRandomQuote());
         }
       } catch (error) {
         console.error('Error fetching quote:', error);
@@ -94,7 +98,16 @@ export default function HomePage() {
       }
     };
 
+    const updateTimeAndGreeting = () => {
+      const now = new Date();
+      const hours = now.getHours();
+      const greetingText = hours < 12 ? "Morning" : hours < 18 ? "Afternoon" : "Evening";
+      setGreeting(greetingText);
+      setCurrentTime(formatDate(now));
+    };
+
     fetchQuote();
+    updateTimeAndGreeting();
   }, []);
   
   return (
@@ -148,19 +161,23 @@ export default function HomePage() {
                 Where Ancient Wisdom Meets Modern AI
               </motion.p>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 2 }}
-                className="pt-6"
-              >
-                <p className="text-base sm:text-lg text-gray-600 mb-1">
-                  Good {new Date().getHours() < 12 ? "Morning" : new Date().getHours() < 18 ? "Afternoon" : "Evening"}! 🙏
-                </p>
-                <p className="text-xs sm:text-sm text-gray-500">
-                  {formatDate(new Date())}
-                </p>
-              </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 2 }}
+                        className="pt-6"
+                      >
+                        {greeting && (
+                          <p className="text-base sm:text-lg text-gray-600 mb-1">
+                            Good {greeting}! 🙏
+                          </p>
+                        )}
+                        {currentTime && (
+                          <p className="text-xs sm:text-sm text-gray-500">
+                            {currentTime}
+                          </p>
+                        )}
+                      </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -214,37 +231,46 @@ export default function HomePage() {
                   </CardTitle>
                 </motion.div>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  className="text-xl sm:text-2xl md:text-3xl font-light italic text-gray-800 leading-relaxed px-2"
-                >
-                  "{dailyWisdom.quote}"
-                </motion.p>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: 0.4 }}
-                  className="text-base sm:text-lg text-saffron-600 font-medium"
-                >
-                  — {dailyWisdom.author}
-                </motion.p>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: 0.6 }}
-                  className="bg-gradient-to-br from-saffron-50 to-gold-50 rounded-2xl p-4 sm:p-6 border border-saffron-100"
-                >
-                  <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
-                    {dailyWisdom.explanation}
-                  </p>
-                </motion.div>
-              </CardContent>
+                      <CardContent className="space-y-6">
+                        {dailyWisdom ? (
+                          <>
+                            <motion.p
+                              initial={{ opacity: 0, y: 20 }}
+                              whileInView={{ opacity: 1, y: 0 }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 0.8, delay: 0.2 }}
+                              className="text-xl sm:text-2xl md:text-3xl font-light italic text-gray-800 leading-relaxed px-2"
+                            >
+                              "{dailyWisdom.quote}"
+                            </motion.p>
+                            <motion.p
+                              initial={{ opacity: 0 }}
+                              whileInView={{ opacity: 1 }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 0.8, delay: 0.4 }}
+                              className="text-base sm:text-lg text-saffron-600 font-medium"
+                            >
+                              — {dailyWisdom.author}
+                            </motion.p>
+                            <motion.div
+                              initial={{ opacity: 0, y: 20 }}
+                              whileInView={{ opacity: 1, y: 0 }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 0.8, delay: 0.6 }}
+                              className="bg-gradient-to-br from-saffron-50 to-gold-50 rounded-2xl p-4 sm:p-6 border border-saffron-100"
+                            >
+                              <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
+                                {dailyWisdom.explanation}
+                              </p>
+                            </motion.div>
+                          </>
+                        ) : (
+                          <div className="text-center py-8">
+                            <div className="w-8 h-8 border-4 border-saffron-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                            <p className="text-gray-600">Loading reflection...</p>
+                          </div>
+                        )}
+                      </CardContent>
             </Card>
           </div>
         </ScrollReveal>
