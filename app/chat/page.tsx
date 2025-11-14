@@ -81,8 +81,9 @@ export default function ChatPage() {
           type: "bot",
           text: data.text || data.message || "I apologize, but I couldn't generate a response.",
           timestamp: new Date(),
-          sources: data.sources || [],
-          confidence: data.confidence || 80,
+          // Sources and confidence are optional - only include if provided by API
+          sources: data.sources,
+          confidence: data.confidence,
         };
         setMessages((prev) => [...prev, botMessage]);
       } else {
