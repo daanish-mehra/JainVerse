@@ -45,16 +45,19 @@ export default function ChatPage() {
   const handleSend = async () => {
     if (!input.trim()) return;
 
+    const currentInput = input.trim();
+    const userMessageId = Date.now();
+    const botMessageId = Date.now() + 1;
+
     const userMessage: Message = {
-      id: messages.length + 1,
+      id: userMessageId,
       type: "user",
-      text: input,
+      text: currentInput,
       timestamp: new Date(),
     };
 
-    setMessages([...messages, userMessage]);
-    const currentInput = input;
     setInput("");
+    setMessages((prev) => [...prev, userMessage]);
     setIsTyping(true);
 
     try {
@@ -74,7 +77,7 @@ export default function ChatPage() {
 
       if (response.ok) {
         const botMessage: Message = {
-          id: messages.length + 2,
+          id: botMessageId,
           type: "bot",
           text: data.text || data.message || "I apologize, but I couldn't generate a response.",
           timestamp: new Date(),
@@ -84,7 +87,7 @@ export default function ChatPage() {
         setMessages((prev) => [...prev, botMessage]);
       } else {
         const errorMessage: Message = {
-          id: messages.length + 2,
+          id: botMessageId,
           type: "bot",
           text: data.error || data.message || "I'm having trouble right now. Please try again later.",
           timestamp: new Date(),
@@ -93,7 +96,7 @@ export default function ChatPage() {
       }
     } catch (error) {
       const errorMessage: Message = {
-        id: messages.length + 2,
+        id: botMessageId,
         type: "bot",
         text: "I apologize, but I'm having connection issues. Please check your internet and try again.",
         timestamp: new Date(),
@@ -153,52 +156,61 @@ export default function ChatPage() {
 
       <div className="flex-1 overflow-y-auto px-4 py-8 space-y-6">
         <AnimatePresence mode="popLayout">
-          {messages.map((message, index) => (
-            <ScrollReveal key={message.id} direction={message.type === "user" ? "left" : "right"} delay={index * 0.1}>
+          {messages.map((message) => (
+            <motion.div
+              key={message.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className={cn(
+                "flex mb-4",
+                message.type === "user" ? "justify-end" : "justify-start"
+              )}
+            >
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                whileHover={{ scale: 1.02 }}
                 className={cn(
-                  "flex",
-                  message.type === "user" ? "justify-end" : "justify-start"
+                  "max-w-[85%] rounded-2xl px-4 py-3 shadow-md",
+                  message.type === "user"
+                    ? "bg-gradient-to-r from-saffron-500 to-gold-500 text-white rounded-br-sm"
+                    : "bg-white border border-saffron-100 rounded-bl-sm"
                 )}
               >
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className={cn(
-                    "max-w-[85%] rounded-3xl px-6 py-4 shadow-lg",
-                    message.type === "user"
-                      ? "bg-gradient-to-br from-saffron-500 to-gold-500 text-white rounded-br-md"
-                      : "bg-white border-2 border-saffron-100 rounded-bl-md"
-                  )}
-                >
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {message.text}
-                  </p>
-                  {message.sources && message.sources.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      transition={{ delay: 0.3 }}
-                      className="mt-4 pt-4 border-t border-white/20"
-                    >
-                      <p className="text-xs font-semibold mb-2 flex items-center">
-                        <BookOpen className="w-3 h-3 mr-1" />
-                        Sources:
-                      </p>
-                      <ul className="text-xs space-y-1">
-                        {message.sources.map((source, idx) => (
-                          <motion.li
-                            key={idx}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.4 + idx * 0.1 }}
-                            className="flex items-center"
-                          >
-                            <span className="mr-1">📖</span>
-                            {source}
-                          </motion.li>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {message.text}
+                </p>
+                {message.sources && message.sources.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-white/20">
+                    <p className="text-xs font-semibold mb-1 flex items-center">
+                      <BookOpen className="w-3 h-3 mr-1" />
+                      Sources:
+                    </p>
+                    <ul className="text-xs space-y-1">
+                      {message.sources.map((source, idx) => (
+                        <li key={idx} className="flex items-center">
+                          <span className="mr-1">📖</span>
+                          {source}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {message.confidence && (
+                  <div className="mt-2 text-xs opacity-80 flex items-center">
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Confidence: {message.confidence}%
+                  </div>
+                )}
+                <p className="text-xs opacity-70 mt-2">
+                  {message.timestamp.toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </motion.div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
                         ))}
                       </ul>
                     </motion.div>
