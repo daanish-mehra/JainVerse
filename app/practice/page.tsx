@@ -14,6 +14,7 @@ interface Practice {
   id: number;
   icon: string;
   title: string;
+  titleJain?: string;
   time: string;
   status: string;
   description?: string;
@@ -192,36 +193,32 @@ export default function PracticePage() {
                           {practice.icon}
                         </motion.span>
                         <div>
-                          <h3 className="font-bold text-lg text-gray-900">{practice.title}</h3>
+                          <h3 className="font-bold text-lg text-gray-900">
+                            {practice.title}
+                            {practice.titleJain && (
+                              <span className="ml-2 text-sm font-normal text-saffron-600">
+                                ({practice.titleJain})
+                              </span>
+                            )}
+                          </h3>
                           <p className="text-sm text-gray-600 mt-1">{practice.time}</p>
                           {practice.description && (
                             <p className="text-xs text-gray-500 mt-1">{practice.description}</p>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        {practice.status !== "completed" && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleCompletePractice(practice.id)}
-                            className="text-xs px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded-lg"
-                          >
-                            ✓
-                          </Button>
-                        )}
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          whileInView={{ scale: 1 }}
-                          viewport={{ once: true }}
-                          transition={{ delay: index * 0.15, type: "spring", stiffness: 300 }}
-                          className="text-3xl"
-                        >
-                          {practice.status === "completed" && "✅"}
-                          {practice.status === "pending" && "⏰"}
-                          {practice.status === "active" && "🔒"}
-                          {practice.status === "scheduled" && "📅"}
-                        </motion.div>
-                      </div>
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        whileInView={{ scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.15, type: "spring", stiffness: 300 }}
+                        className="text-3xl"
+                      >
+                        {practice.status === "completed" && "✅"}
+                        {practice.status === "pending" && "⏰"}
+                        {practice.status === "active" && "🔒"}
+                        {practice.status === "scheduled" && "📅"}
+                      </motion.div>
                     </div>
                   </motion.div>
                 </ScrollReveal>
