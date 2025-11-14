@@ -31,26 +31,22 @@ export async function getContainer(containerId: string): Promise<Container | nul
   try {
     const database = await getDatabase();
     
-    // Try to get container, create if it doesn't exist
+    // Create container if it doesn't exist, or return existing one
     try {
-      const container = database.container(containerId);
-      await container.read();
+      const { container } = await database.containers.createIfNotExists({
+        id: containerId,
+        partitionKey: { paths: ["/id"] },
+      });
       return container;
-    } catch (error: any) {
-      // Container doesn't exist, create it
-      if (error.code === 404) {
-        try {
-          const { container } = await database.containers.createIfNotExists({
-            id: containerId,
-            partitionKey: { paths: ["/id"] },
-          });
-          return container;
-        } catch (createError) {
-          console.error(`Failed to create container ${containerId}:`, createError);
-          return null;
-        }
+    } catch (createError: any) {
+      // If createIfNotExists fails, try to get existing container
+      try {
+        const container = database.container(containerId);
+        return container;
+      } catch (getError) {
+        console.error(`Failed to get/create container ${containerId}:`, createError || getError);
+        return null;
       }
-      throw error;
     }
   } catch (error) {
     console.error(`Error getting container ${containerId}:`, error);
@@ -80,6 +76,7 @@ export interface Article {
 export async function getRandomQuote(): Promise<Quote | null> {
   try {
     const container = await getContainer('quotes');
+    if (!container) return null;
     
     const querySpec = {
       query: 'SELECT * FROM c',
@@ -98,26 +95,38 @@ export async function getRandomQuote(): Promise<Quote | null> {
 }
 
 export async function getAllQuotes(): Promise<Quote[]> {
-  const container = await getContainer('quotes');
-  
-  const querySpec = {
-    query: 'SELECT * FROM c ORDER BY c.createdAt DESC',
-  };
-  
-  const { resources } = await container.items.query(querySpec).fetchAll();
-  return resources as Quote[];
+  try {
+    const container = await getContainer('quotes');
+    if (!container) return [];
+    
+    const querySpec = {
+      query: 'SELECT * FROM c ORDER BY c.createdAt DESC',
+    };
+    
+    const { resources } = await container.items.query(querySpec).fetchAll();
+    return resources as Quote[];
+  } catch (error) {
+    console.warn('Failed to fetch quotes:', error);
+    return [];
+  }
 }
 
 export async function getArticles(limit: number = 10): Promise<Article[]> {
-  const container = await getContainer('articles');
-  
-  const querySpec = {
-    query: 'SELECT TOP @limit * FROM c ORDER BY c.createdAt DESC',
-    parameters: [{ name: '@limit', value: limit }],
-  };
-  
-  const { resources } = await container.items.query(querySpec).fetchAll();
-  return resources as Article[];
+  try {
+    const container = await getContainer('articles');
+    if (!container) return [];
+    
+    const querySpec = {
+      query: 'SELECT TOP @limit * FROM c ORDER BY c.createdAt DESC',
+      parameters: [{ name: '@limit', value: limit }],
+    };
+    
+    const { resources } = await container.items.query(querySpec).fetchAll();
+    return resources as Article[];
+  } catch (error) {
+    console.warn('Failed to fetch articles:', error);
+    return [];
+  }
 }
 
 export { client };
