@@ -10,7 +10,7 @@ let cachedPaths: any[] | null = null;
 let pathsCacheTime: number = 0;
 const CACHE_DURATION = 3600000;
 
-async function getLearningPathsFromData() {
+export async function getLearningPathsFromData() {
   try {
     const now = Date.now();
     if (cachedPaths && (now - pathsCacheTime) < CACHE_DURATION) {

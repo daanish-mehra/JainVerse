@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getArticles } from '@/lib/cosmos';
 import { detectActionFromMessage } from '@/lib/action-detector';
+import { cleanArticleContent } from '@/lib/content-cleaner';
 
 const languageMap: Record<string, string> = {
   EN: 'English',
@@ -126,7 +127,10 @@ export async function POST(req: NextRequest) {
       if (relevantArticles.length > 0) {
         context = relevantArticles
           .slice(0, 3)
-          .map(article => `Title: ${article.title}\nContent: ${article.content.substring(0, 500)}...`)
+          .map(article => {
+            const cleanText = cleanArticleContent(article.content?.substring(0, 800) || "");
+            return `Title: ${article.title}\nContent: ${cleanText}...`;
+          })
           .join("\n\n---\n\n");
       }
     } catch (error) {
@@ -172,16 +176,19 @@ Please provide a helpful, accurate response that matches the user's level of und
 
     // Generate response
     let responseText: string;
-    try {
-      const result = await model.generateContent(fullPrompt);
-      const response = await result.response;
-      responseText = response.text();
-      
-      // Validate response
-      if (!responseText || responseText.trim().length === 0) {
-        throw new Error('Empty response from Gemini API');
-      }
-    } catch (error) {
+            try {
+              const result = await model.generateContent(fullPrompt);
+              const response = await result.response;
+              responseText = response.text();
+              
+              // Validate response
+              if (!responseText || responseText.trim().length === 0) {
+                throw new Error('Empty response from Gemini API');
+              }
+              
+              // Clean the generated text to remove unwanted content
+              responseText = cleanArticleContent(responseText);
+            } catch (error) {
       console.error('Gemini API error:', error);
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -212,8 +219,15 @@ Please provide a helpful, accurate response that matches the user's level of und
       throw error;
     }
 
-    // Make response more concise if action button is available
-    if (action && responseText.length > 150) {
+    // Make response more concise if action button is available (but only for chat, not for section text generation)
+    // Skip this truncation if the message indicates it's for a section (contains "comprehensive" or "detailed explanation")
+    const isSectionGeneration = message && (
+      message.includes('comprehensive') || 
+      message.includes('detailed explanation') ||
+      message.includes('educational and engaging')
+    );
+    
+    if (action && !isSectionGeneration && responseText.length > 150) {
       const firstSentence = responseText.split(/[.!?]/)[0];
       if (firstSentence.length > 50 && firstSentence.length < 200) {
         responseText = firstSentence.trim() + '.';

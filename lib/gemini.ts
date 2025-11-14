@@ -37,7 +37,7 @@ export async function generateStoryFromArticle(article: {
     return null;
   }
 
-  const model = client.getGenerativeModel({ model: 'gemini-pro' });
+  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
   const age = article.age || '8-12 years';
   
   const prompt = `Based on the following Jain article, create an engaging story suitable for ${age} year olds.
@@ -95,7 +95,7 @@ export async function generateMoralDilemmaFromArticle(article: {
     return null;
   }
 
-  const model = client.getGenerativeModel({ model: 'gemini-pro' });
+  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
   
   const prompt = `Based on the following Jain article, create a moral dilemma suitable for ages 10+.
 
@@ -131,6 +131,99 @@ Return your response in JSON format:
     return JSON.parse(text);
   } catch (error) {
     console.error('Error generating moral dilemma:', error);
+    return null;
+  }
+}
+
+export async function generateSummaryFromArticle(article: {
+  title: string;
+  content: string;
+}): Promise<string | null> {
+  const client = getGeminiClient();
+  if (!client) {
+    return null;
+  }
+
+  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  
+  const prompt = `Based on the following Jain article, create a clear and concise summary that:
+- Is 200-300 words long
+- Captures the key teachings and concepts
+- Is written in simple, accessible language
+- Focuses on the most important information
+- Maintains accuracy to Jain principles
+
+Article Title: ${article.title}
+Article Content: ${article.content.substring(0, 4000)}
+
+Provide only the summary text, no additional formatting or labels.`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text().trim();
+  } catch (error) {
+    console.error('Error generating summary:', error);
+    return null;
+  }
+}
+
+export async function generateQuizFromArticle(article: {
+  title: string;
+  content: string;
+}): Promise<{
+  question: string;
+  options: string[];
+  correct: number;
+  explanation: string;
+  source: string;
+} | null> {
+  const client = getGeminiClient();
+  if (!client) {
+    return null;
+  }
+
+  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  
+  const prompt = `Based on the following Jain article, create a single quiz question that:
+- Tests understanding of the key concepts from the article
+- Has exactly 4 multiple choice options
+- Has one clearly correct answer
+- Includes a brief explanation of why the answer is correct
+- Is appropriate for learners of Jain philosophy
+
+Article Title: ${article.title}
+Article Content: ${article.content.substring(0, 4000)}
+
+Return your response in JSON format:
+{
+  "question": "The quiz question",
+  "options": ["Option A", "Option B", "Option C", "Option D"],
+  "correct": 0,
+  "explanation": "Brief explanation of the correct answer",
+  "source": "${article.title}"
+}
+
+The "correct" field should be the index (0-3) of the correct option.`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const quiz = JSON.parse(jsonMatch[0]);
+      // Validate quiz structure
+      if (quiz.question && Array.isArray(quiz.options) && quiz.options.length === 4 && 
+          typeof quiz.correct === 'number' && quiz.correct >= 0 && quiz.correct < 4) {
+        return quiz;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error generating quiz:', error);
     return null;
   }
 }
