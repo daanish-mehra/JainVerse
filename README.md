@@ -38,11 +38,11 @@
 - **Fonts**: Inter, Manrope (Google Fonts)
 
 ### Backend
-- **Next.js Server Routes** (for MVP)
-- **Azure OpenAI** (GPT-4o-mini / GPT-4-turbo)
-- **Azure Cognitive Services** (Speech-to-Text, TTS)
-- **Vector DB**: ChromaDB or Pinecone (for RAG)
-- **Database**: Supabase or MySQL (for user data)
+- **Next.js Server Routes**
+- **Azure OpenAI** (GPT-4o-mini / GPT-4-turbo) - for AI chat
+- **Azure Cosmos DB** - Microsoft's flagship NoSQL database
+- **Azure Cognitive Services** - Speech-to-Text, TTS
+- **Vector DB**: Azure AI Search or ChromaDB (for RAG)
 
 ## 🎨 Design
 
@@ -270,14 +270,35 @@ az webapp deploy
 - **GitHub**: https://github.com/daanish-mehra/JainVerse
 - **Website**: https://jainverse.app (Coming Soon)
 
+## 📊 Contribution
+
+### Project Statistics
+**Total Lines of Code**: ~5,022 lines
+
+**Breakdown:**
+- Frontend Pages: ~2,500 lines
+- API Routes: ~800 lines
+- Components: ~1,200 lines
+- Utilities & Config: ~522 lines
+
+### Contributors
+
+**Daanish Mehra** - Project Lead & Full-Stack Developer
+- Primary maintainer of `main` branch
+- Core architecture & design
+- Feature implementation & deployment
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines.
+
 ## 🙏 Acknowledgments
 
 - **Jainworld.com** for providing comprehensive Jain knowledge resources
 - **JITO Atlanta** for organizing this hackathon
+- **Microsoft** for providing Azure services
 - **Jain community** for preserving and sharing knowledge
 
 ---
 
-**Built with ❤️ for the Jain Hackathon 2025**
+**Built with ❤️ for the Jain Hackathon 2025 - Microsoft Partnership**
 
 **JainAI** - Mobile App | **JainVerse** - Platform Website

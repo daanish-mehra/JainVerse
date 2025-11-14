@@ -35,8 +35,7 @@ export default function TeachingPage() {
   const [transcript, setTranscript] = useState("");
 
   const handleSummarize = () => {
-    
-    console.log("Summarizing lecture...", { transcript, selectedLanguage });
+    // TODO: Implement lecture summarization with Azure OpenAI
   };
 
   return (
