@@ -136,10 +136,6 @@ Or Azure Web App:
 az webapp deploy
 ```
 
-## Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
-
 ## License
 
 Private project for JITO Atlanta Hackathon 2025.
