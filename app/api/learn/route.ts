@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getArticles, getContainer } from "@/lib/cosmos";
-import { generateQuizFromArticle } from "@/lib/azure-openai";
+import { generateQuizFromArticle } from "@/lib/gemini";
 import fs from "fs";
 import path from "path";
 
